@@ -14,7 +14,7 @@
 
 ;; nice scrolling
 (setq scroll-margin 2
-      scroll-conservatively 1000
+      scroll-conservatively 10000
       scroll-preserve-screen-position 1)
 
 ;; mode line settings
@@ -33,9 +33,9 @@
 ;; more useful frame title, that show either a file or a
 ;; buffer name (if the buffer isn't visiting a file)
 (setq frame-title-format
-      '("" invocation-name " Prelude - " (:eval (if (buffer-file-name)
-                                            (abbreviate-file-name (buffer-file-name))
-                                          "%b"))))
+      '((:eval (if (buffer-file-name)
+		   (abbreviate-file-name (buffer-file-name))
+		 "%b"))))
 
 ;; use blackboard as the default theme
 (load-theme 'blackboard t)

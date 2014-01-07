@@ -13,9 +13,9 @@
 (defvar themes-dir (expand-file-name "themes" root-dir)
   "This directory houses themes.")
 (setq custom-theme-directory themes-dir)
-(defvar vendor-dir (expand-file-name "vendor" root-dir)
-  "This directory houses packages that are not yet available in ELPA (or MELPA).")
 (defvar savefile-dir (expand-file-name "savefile" root-dir)
+  "This folder stores all the automatically generated save/history-files.")
+(defvar backup-dir (expand-file-name "backups" root-dir)
   "This folder stores all the automatically generated save/history-files.")
 (defvar load-modules-file (expand-file-name "load-modules.el" root-dir)
   "This files contains a list of modules that will be loaded.")
@@ -36,8 +36,6 @@
 ;; add Prelude's directories to Emacs's `load-path'
 (add-to-list 'load-path core-dir)
 (add-to-list 'load-path modules-dir)
-(add-to-list 'load-path vendor-dir)
-(add-subfolders-to-load-path vendor-dir)
 
 ;; reduce the frequency of garbage collection by making it happen on
 ;; each 50MB of allocated data (the default is on every 0.76MB)

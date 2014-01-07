@@ -6,7 +6,7 @@
 (package-initialize)
 
 (defvar packages
-  '()
+  '(dash)
   "A list of packages to ensure are installed at launch.")
 
 (defun check-packages-installed-p ()
