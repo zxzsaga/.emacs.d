@@ -1,0 +1,27 @@
+block serverForm
+  .form-group
+    label Id
+    input.form-control(type='text', name='id', value=server._id)
+  .form-group
+    label Name
+    input.form-control(type='text', name='name', value=server.name)
+  .form-group
+    label Url
+    input.form-control(type='text', name='url', value=server.url)
+  .form-group
+    label Status
+    select.form-control(name='status')
+      - for (var status in statusTable)
+        if server.status == status
+          option(value=status, selected) #{ statusTable[status] }
+        else
+          option(value=status) #{ statusTable[status] }
+  .form-group
+    label AllowNew
+    select.form-control(name='allowNew')
+      - for (var allowNew in boolTable)
+        if server.allowNew == allowNew
+          option(value=allowNew, selected) #{ boolTable[allowNew] }
+        else
+          option(value=allowNew) #{ boolTable[allowNew] }
+  button.btn.btn-default(type='submit') 确定

@@ -40,6 +40,12 @@
 ;; use blackboard as the default theme
 (load-theme 'blackboard t)
 
+;; 在mac下显示中文字体
+(set-fontset-font
+(frame-parameter nil 'font)
+'han
+(font-spec :family "Hiragino Sans GB" ))
+
 (provide 'ui)
 ;;; prelude-ui.el ends here
 

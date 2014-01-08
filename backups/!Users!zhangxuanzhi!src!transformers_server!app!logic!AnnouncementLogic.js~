@@ -1,0 +1,10 @@
+'use strict';
+
+var Gamer = require(appModules.models.Gamer);
+
+/**
+ * 获取announcement
+ */
+var getAnnouncement = function(gamer, cb) {
+    var AnnouncementDAO = app.GamerDAO;
+};

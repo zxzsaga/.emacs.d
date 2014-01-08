@@ -1,0 +1,82 @@
+'use strict';
+
+var AdminBaseController = require('./AdminBaseController');
+
+function AdminAccountController() {
+    AdminAccountController.super_.call(this);
+    var self = this;
+
+    this.skipBeforeFilter('adminFilter');
+
+    this.action('admin/login', function(req, res, cb) {
+        if (req.cookies.adminUser) {
+            res.redirect('/admin');
+        }
+        res.render('account/login.jade');
+        return cb();
+    });
+
+    this.action('admin/logout', function(req, res, cb) {
+        res.clearCookie('adminUser');
+        res.redirect('/admin/login');
+        return cb();
+    });
+
+    this.action('admin/update', function(req, res, cb) {
+        res.render('account/update.jade');
+        return cb();
+    });
+
+    this.action('admin/doLogin', function(req, res, cb) {
+        app.AdminDAO.findOneByEmail(req.param('email'), function(err, foundDoc) {
+            if (foundDoc == null) {
+                res.render('account/login.jade', { loginStatus: "Email doesn't exist" });
+            }
+            else if (foundDoc.password != req.param('pwd')) {
+                res.render('account/login.jade', { loginStatus: 'Password incorrect' });
+            }
+            else {
+                res.cookie('adminUser', foundDoc.email, { maxAge: 1000*60*60*24 })
+                res.redirect('/admin');
+            }
+            return cb();
+        });
+        return;
+    });
+
+    this.action('admin/doUpdate', function(req, res, cb) {
+        app.AdminDAO.findOneByEmail(req.cookies.adminUser, function(err, foundDoc) {
+            if (foundDoc.password != req.param('oldPwd')) {
+                res.render('account/update.jade', { updateStatus: 'Password incorrect' });                
+            }
+            else if (req.param('newPwd') != req.param('newPwdConfirm')) {
+                res.render('account/update.jade', { updateStatus: "New password doesn't match" });
+            }
+            
+            else app.AdminDAO.update(
+                { _id: foundDoc._id },
+                { $set: { password: req.param('newPwd') } },
+                function(err, updatedDoc) {
+                    res.cookie('adminUser', req.param('newPwd'), { maxAge: 1000*60*60*24 });
+                    res.render('account/update.jade', { updateStatus: "Change password success" });
+                }
+            );
+        })
+    });
+};
+
+util.inherits(AdminAccountController, AdminBaseController);
+
+var ctr = new AdminAccountController();
+
+exports.routes = {
+    GET: {
+        '/admin/login': ctr.action('admin/login'),
+        '/admin/logout': ctr.action('admin/logout'),
+        '/admin/update': ctr.action('admin/update')
+    },
+    POST: {
+        '/admin/login': ctr.action('admin/doLogin'),
+        '/admin/update': ctr.action('admin/doUpdate')
+    }
+};

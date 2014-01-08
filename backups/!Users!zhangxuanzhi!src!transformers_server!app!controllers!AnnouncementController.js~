@@ -1,0 +1,8 @@
+'use strict';
+
+var Gamer = require(appModules.models.Gamer);
+var Announcement = require(appModules.models.Announcement);
+
+/**
+ *
+*/

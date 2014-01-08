@@ -1,0 +1,761 @@
+var apiConfigs = {};
+// Gateway
+var gatewayConfigs = {
+    "CHECK_BINARY": {
+        "api-description": "Check binary，提供bundleId+binaryVersion <br>" + "bundleId: bundleId <br/>" + "binaryVersion: 客户端的binaryVersion <br/>" + "Response: maintain, boolean, 是否停机维护 <br />" + "needUpdate, boolean, 是否需要更新客户端程序 <br />" + "appUrl, string, 客户端应用商店的url",
+        "api-endpoint": "/check/binary",
+        "api-parameters": {
+            "bundleId": "",
+            "binaryVersion": ""
+        }
+    },
+    "CHECK_FRAME": {
+        "api-description": "Check frame，提供提供appframeManifestVersion <br>" + "bundleId: bundleId <br/>" + "appFrameManifestVersion: 客户端的appframeManifestVersion <br/>" + "Response: appframeManifestPrefixUrl, string, appframe manifest url前缀" + "appframeManifestVersion: appframe manifest 版本 <br/>" + "appframeManifestName: appframe manifest 文件名",
+        "api-endpoint": "/check/frame",
+        "api-parameters": {
+            "bundleId": "",
+            "appframeManifestVersion": ""
+        }
+    },
+    "SERVER_LIST": {
+        "api-description": "Server List，提供mobageId+bundleId <br>" + "mobageId: 玩家的梦宝谷Id <br/>" + "bundleId: bundleId <br/>" + "Response: lastLogin: [1, 2], 包含登录过的server id的array, 按登录时间倒序排列 <br />" + "serverList: 包含可登录的server信息的array",
+        "api-endpoint": "/server/list",
+        "api-parameters": {
+            "mobageId": "",
+            "bundleId": ""
+        }
+    },
+    "CHECK_CONFIG": {
+        "api-description": "Check config，提供configManifestVersion+resManifestVersion <br>" + "serverId: 玩家登录的服务器Id <br>" + "configManifestVersion: 客户端的configManifestVersion <br/>" + "resManifestVersion: 客户端的resManifestVersion <br/>" + "Response: configManifestPrefixUrl, string, 配置文件 manifest url前缀" + "configManifestVersion: 配置文件 manifest 版本 <br/>" + "configManifestName: 配置文件 manifest 文件名 <br/>" + "resManifestPrefixUrl, string, 动态下载资源 manifest url前缀 <br/>" + "resManifestVersion: 动态下载资源 manifest 版本 <br/>" + "resManifestName: 动态下载资源 manifest 文件名",
+        "api-endpoint": "/check/config",
+        "api-parameters": {
+            "serverId": "",
+            "configManifestVersion": "",
+            "resManifestVersion": ""
+        }
+    },
+    "LOGIN_RECORD": {
+        "api-description": "Login record，记录玩家登录历史 <br>" + "serverId: 玩家登录的服务器Id <br>" + "mobageId: 玩家的梦宝谷Id <br>" + "Response: ",
+        "api-endpoint": "/login/record",
+        "api-parameters": {
+            "serverId": "",
+            "mobageId": ""
+        }
+    }
+};
+var gatewayAPINames = Object.keys(gatewayConfigs);
+jQuery.extend(apiConfigs, gatewayConfigs);
+
+// Basement
+var basementConfigs = {
+    "GAME_LOGIN": {
+        "api-description": "Gamer登陆，提供mobageId+serverId <br>" + "bundleId: bundleId <br/>" + "mobageId: 玩家的梦宝谷Id <br/>" + "serverId: 玩家登录的服务器Id <br/>" + "Response: gamer, 玩家的所有信息 <br/>" + "newGamer: boolean, 是否是新玩家",
+        "api-endpoint": "/login",
+        "api-parameters": {
+            "bundleId": "",
+            "mobageId": "",
+            "serverId": ""
+        }
+    },
+    "BASE_HERO_INIT": {
+        "api-description": "初选角色 <br />" + "gamerId: 玩家在某个服务器的唯一标记 <br />" + "heroDefinitionId: 玩家选择的角色定义id <br />" + "11000011: [11000011, 11000012, 11000013], 11000021: [11000021, 11000022, 11000023], 11000031: [11000031, 11000032, 11000033] <br/>" + "response Data: squad: {属性包括 id, type, members}; heroesAdded: [{属性包括 id, definitionId, skillInstanceId};",
+        "api-endpoint": "/base/hero/init",
+        "api-parameters": {
+            "gamerId": "",
+            "heroDefinitionId": ""
+        }
+    },
+    "BASE_RENAME": {
+        "api-description": "基地重命名 <br />" + "gamerId: 玩家在某个服务器的唯一标记 <br/>" + "name: 新的基地名称 长度规则：全英文18字以内，中英混合14字以内，全中文8字以内 <br />" + "response Data: 空",
+        "api-endpoint": "/base/rename",
+        "api-parameters": {
+            "gamerId": "",
+            "name": ""
+        }
+    },
+    "BASE_HARVEST": {
+        "api-description": "基地生产系统获取 <br />" + "gamerId: 玩家在某个服务器的唯一标记 <br/>" + "type: 生产系统的类型 目前有两种：'coin', 'chip' 分别代表金币收获，芯片收获 <br />" + "response Data: 统一返回lastCollectAt，另外，如果是chip类型的话：{chipAdded: {chip instance 属性包括 'id', 'definitionId' }}; coin类型的话: {coinAdded: number}",
+        "api-endpoint": "/base/harvest",
+        "api-parameters": {
+            "gamerId": "",
+            "type": ""
+        }
+    },
+    "OPERATOR_SET": {
+        "api-description": "为玩家的操作室设置操作员<br />" + "gamerId: 玩家在某个服务器的唯一标记 <br/>" + "opId: 操作室Id, 比如 5201:command, 5202:tech, 5203:manu, 5204:training<br />" + "heroId: 设置的英雄Instance id <br/>" + "response data: 空",
+        "api-endpoint": "/operator/set",
+        "api-parameters": {
+            "gamerId": "",
+            "opId": "",
+            "heroId": ""
+        }
+    },
+    "OPERATOR_UNSET": {
+        "api-description": "为玩家的操作室制空操作员<br />" + "gamerId: 玩家在某个服务器的唯一标记 <br/>" + "opId: 操作室Id, 比如 5201:command, 5202:tech, 5203:manu, 5204:training <br/>" + "response data: 空",
+        "api-endpoint": "/operator/unset",
+        "api-parameters": {
+            "gamerId": "",
+            "opId": ""
+        }
+    },
+    "TECH_UPGRADE": {
+        "api-description": "为玩家升级某种科技<br />" + "gamerId: 玩家在某个服务器的唯一标记 <br/>" + "techId: 科技Id, 比如5101是hp的科技，5102是atk的科技，5103:def, 5104:spd, 5105:cri, 5106:anticri, 5107:blk, 5108:antiblk<br />" + "response data: 空",
+        "api-endpoint": "/tech/upgrade",
+        "api-parameters": {
+            "gamerId": "",
+            "techId": ""
+        }
+    },
+    "DECK_SET": {
+        "api-description": "为玩家设置上阵Deck<br />" + "gamerId: 玩家在某个服务器的唯一标记 <br/>" + "deck: 新的deck数组 - [1,2,null, 3,4,5, 6,7,8] 表示把hero编号为3,4,5的放中间(其中3是leader); 1,2,null放左边，其中1是leader, 靠右的那个位置上为空.同理<br/>" + "response data: 空",
+        "api-endpoint": "/base/deck/set",
+        "api-parameters": {
+            "gamerId": "",
+            "deck": ""
+        }
+    },
+    "SPARK_EXCHANGE": {
+        "api-description": "用火种转化塞星金属 <br />" + "gamerId: 玩家在某个服务器的唯一标记 <br/>" + "sparkId: 火种的defiintionId 请参考 test/fixtures/configurations/items.csv里itemType为61的id。比如201012 <br />" + "amount: 火种数量 - 10个代表你用10这个火种兑换塞星金属 <br />" + "response Data: {itemsAdded: item数组，每个元素结构：{itemsObject 属性包括 'id'(definitionId), 'amount', 'type'(hero或者item)}}",
+        "api-endpoint": "/base/spark/exchange",
+        "api-parameters": {
+            "gamerId": "",
+            "sparkId": "",
+            "amount": ""
+        }
+    },
+    "TRAINING_START": {
+        "api-description": "训练室开始训练 <br />" + "gamerId: 玩家在某个服务器的唯一标记 <br/>" + "heroId: 训练的英雄instanceId - 请参考test/fixtures/configurations/heroes.csv里的id，比如11000008<br />" + "trainingId: 训练的definitionId - 5301表示8小时的，5302表示24小时的 <br />" + "mode: 训练的类型 1表示免费训练，2表示付费训练 <br />" + "response Data: {trainingAdded: {training instance  属性包括  'id', 'definitionId', 'heroId', 'startAt' }}",
+        "api-endpoint": "/training/start",
+        "api-parameters": {
+            "gamerId": "",
+            "heroId": "",
+            "trainingId": "",
+            "mode": ""
+        }
+    },
+    "TRAINING_END": {
+        "api-description": "训练室结束训练 <br />" + "gamerId: 玩家在某个服务器的唯一标记 <br/>" + "trainingId: 训练的instanceId <br />" + "response Data: {heroXpAdded: number}",
+        "api-endpoint": "/training/end",
+        "api-parameters": {
+            "gamerId": "",
+            "trainingId": ""
+        }
+    },
+    "GET_WHOLE_PROFILE": {
+        "api-description": "获取玩家完整信息 <br />" + "gamerId: 玩家在某个服务器的唯一标记 <br />" + "targetGamerId: 玩家在某个服务器的唯一标记 ",
+        "api-endpoint": "/profile/get",
+        "api-parameters": {
+            "gamerId": "",
+            "targetGamerId": ""
+        }
+    }
+};
+var basementAPINames = Object.keys(basementConfigs);
+jQuery.extend(apiConfigs, basementConfigs);
+
+// Hero
+var heroConfigs = {
+    "REFRESH_HERO_ABILITY": {
+        "api-description": "在培养玩家的英雄之前，需要先使用能量块来刷新出3个备选的方案，如果存在上次没有使用的备选方案，则直接返回给玩家，如果没有的话，则根据玩家的情况来进行计算<br/>" + "gamerId: 玩家在某个服务器的唯一标记 <br/>" + "heroId: 刷新技能的heroId <br/>" + "Response: status --> 返回刷新的三个选项，分别表示刷新出来强化的是哪个数据；itemRemoved：刷新需要消耗的道具（如果用户已经存在一个没有消耗地刷新，是不需要消耗道具的）<br/>",
+        "api-endpoint": "/hero/develop/refresh",
+        "api-parameters": {
+            "gamerId": "",
+            "heroId": ""
+        }
+    },
+    "DEVELOP_HERO": {
+        "api-description": "根据玩家的选择来进行英雄的培养<br/>" + "gamerId: 玩家在某个服务器的唯一标记 <br/>" + "heroId: 刷新技能的heroId <br/>" + "option: 玩家选中的潜力培养选项， 0，1，2表示从左到右的3个选择<br/>" + "type: 是否是付费刷新 0表示普通培养，1表示付费培养 <br/>" + "Response: status--->返回培养的某个值，ticketRemoved：如果是付费培养的话，这个值返回消耗的太空券<br/>",
+        "api-endpoint": "/hero/develop",
+        "api-parameters": {
+            "gamerId": "",
+            "heroId": "",
+            "option": "",
+            "type": ""
+        }
+    },
+    "EVOLVE_HERO": {
+        "api-description": "英雄的升星<br/>" + "gamerId: 玩家在某个服务器的唯一标记 <br/>" + "heroId: 刷新技能的heroId <br/>" + "Response: star--->英雄升星后的星级，itemRemoved：表示升星过程中消耗的道具<br/>",
+        "api-endpoint": "/hero/evolve",
+        "api-parameters": {
+            "gamerId": "",
+            "heroId": ""
+        }
+    },
+    "IMPART_HERO": {
+        "api-description": "英雄之间的传功<br/>" + "gamerId: 玩家在某个服务器的唯一标记 <br/>" + "fromHeroId: 散功的英雄ID<br/>" + "toHeroId:   接收英雄的ID<br/>" + "type:       传功的类型，0->普通，1->付费<br/>" + "Response: xp->传功传递的xp，itemAdded->如果散功的英雄已经升星或者培养，需要返还给玩家一些道具作为补偿；itemRemoved->传功消耗的道具<br/>",
+        "api-endpoint": "/hero/impart",
+        "api-parameters": {
+            "gamerId": "",
+            "fromHeroId": "",
+            "toHeroId": "",
+            "type": ""
+        }
+    },
+    "CHANGE_FORM": {
+        "api-description": "变更某个英雄的默认形态，是采用机器人形态上阵出战还是变形后的形态出战<br/>" + "gamerId: 玩家在某个服务器的唯一标记 <br/>" + "heroId: 刷新技能的heroId <br/>" + "form:   形态，1->normal形态，2->变形形态<br/>" + "Response: 只有错误与否，没其他的信息<br/>",
+        "api-endpoint": "/hero/changeForm",
+        "api-parameters": {
+            "gamerId": "",
+            "heroId": "",
+            "form": ""
+        }
+    },
+    "DISMISS_HERO": {
+        "api-description": "英雄的解聘<br/>" + "gamerId: 玩家在某个服务器的唯一标记 <br/>" + "heroId: 需要被解雇英雄的ID<br/>" + "Response: coinAdded-->卖英雄增加的金币<br/>",
+        "api-endpoint": "/hero/dismiss",
+        "api-parameters": {
+            "gamerId": "",
+            "heroId": ""
+        }
+    },
+    "FUSE_HERO": {
+        "api-description": "从火种来合成英雄<br/>" + "gamerId: 玩家在某个服务器的唯一标记 <br/>" + "sparkId: 需要合成成为英雄的火种ID<br/>" + "Response:heroAdded-->增加的英雄，itemRemoved-->删除的火种",
+        "api-endpoint": "/hero/spark/fuse",
+        "api-parameters": {
+            "gamerId": "",
+            "sparkId": ""
+        }
+    },
+    "HIRE_HERO": {
+        "api-description": "招募英雄<br/>" + "gamerId: 玩家在某个服务器的唯一标记 <br/>" + "type: 招募英雄的三种形式, 1->十里挑一，2->千里挑一，3->万里挑一<br/>" + "Response: lastUpdateAt-->此次刷新服务器返回的时间；sparkAdded-->如果英雄已经存在，转换成的火种；heroAdded-->招募到的英雄；ticketRemoved：如果是付费刷新，消耗的太空券<br/>",
+        "api-endpoint": "/hero/hire",
+        "api-parameters": {
+            "gamerId": "",
+            "type": ""
+        }
+    }
+};
+var heroAPINames = Object.keys(heroConfigs);
+jQuery.extend(apiConfigs, heroConfigs);
+
+// Skill
+var skillConfigs = {
+    "SKILL_SET": {
+        "api-description": "为Gamer的某个英雄身上装配技能, 提供技能的instanceId<br>" + "skillId   : 技能的instanceId<br>" + "skillIndex: 技能槽位置[0,1,2]<br>" + "heroId   : 英雄的instanceId<br>" + "gamerId  : 用户id",
+        "api-endpoint": "/skill/set",
+        "api-parameters": {
+            "skillId": "",
+            "skillIndex": "",
+            "heroId": "",
+            "gamerId": ""
+        }
+    },
+    "SKILL_UNSET": {
+        "api-description": "把英雄身上的技能卸载下来, 提供技能的instanceId<br>" + "skillId   : 技能的instanceId<br>" + "gamerId  : 用户id",
+        "api-endpoint": "/skill/unset",
+        "api-parameters": {
+            "skillId": "",
+            "gamerId": ""
+        }
+    },
+    "SKILL_SELL": {
+        "api-description": "出售玩家的技能<br>" + "skillIds   : 技能的instanceId<br>" + "gamerId  : 用户id<br>" + "response : 'data':{'skillsRemoved':被出售的技能id列表, 'coinAdded':活的的金钱",
+        "api-endpoint": "/skill/sell",
+        "api-parameters": {
+            "skillIds": "",
+            "gamerId": ""
+        }
+    },
+    "SKILL_UPGRADE": {
+        "api-description": "升级玩家的技能<br>" + "skillId   : 技能的instanceId<br>" + "skillConsumedIds  : 消耗的技能的instanceId列表<br>" + "gamerId  : 用户id<br>" + "response : 'skillsRemoved':消耗的技能id列表, 'skillXpAdded':获得的skill经验值",
+        "api-endpoint": "/skill/upgrade",
+        "api-parameters": {
+            "skillId": "",
+            "skillConsumedIds": "",
+            "gamerId": ""
+        }
+    },
+    "SKILL_FUSE": {
+        "api-description": "用玩家拥有的技能碎片合成技能<br>" + "skillId   : 技能碎片的defId<br>" + "gamerId  : 用户id<br>" + "response : 'skillAdded': {'definitionId':新合成技能的定义id, 'id':新技能的实例id}, 'skillSparkRemoved':{'definitionId':消耗的技能碎片定义id, 'amount':消耗碎片的数量}'",
+        "api-endpoint": "/skill/spark/fuse",
+        "api-parameters": {
+            "skillSparkId": "",
+            "gamerId": ""
+        }
+    }
+};
+var skillAPINames = Object.keys(skillConfigs);
+jQuery.extend(apiConfigs, skillConfigs);
+
+// Equipment
+var equipmentConfigs = {
+    "EQUIPMENT_SET": {
+        "api-description": "为某个英雄装配武器, 提供武器的instanceId<br>" + "equipmentId   : 武器的instanceId<br>" + "equipmentIndex: 武器槽位置 [0,1,2]<br>" + "heroId   : 英雄的instanceId<br>" + "gamerId  : 用户id",
+        "api-endpoint": "/equipment/set",
+        "api-parameters": {
+            "equipmentId": "",
+            "equipmentIndex": "",
+            "heroId": "",
+            "gamerId": ""
+        }
+
+    },
+    "EQUIPMENT_UNSET": {
+        "api-description": "卸载装备, 提供装备的instanceId<br>" + "equipmentId : 装备的instanceId<br>" + "heroId   : 英雄的instanceId<br>" + "gamerId  : 用户id",
+        "api-endpoint": "/equipment/unset",
+        "api-parameters": {
+            "equipmentId": "",
+            "heroId": "",
+            "gamerId": ""
+        }
+    },
+    "EQUIPMENT_SELL": {
+        "api-description": "出售用户拥有的装备, 提供装备instanceId数组<br>" + "equipmentIds   : 装备的instanceId数组<br>" + "gamerId  : 用户id<br>" + "response : 'equipmentRemoved':出售的装备列表, 'coinAdded':出售活的的金钱",
+        "api-endpoint": "/equipment/sell",
+        "api-parameters": {
+            "equipmentIds": "",
+            "gamerId": ""
+        }
+    },
+    "EQUIPMENT_UPGRADE": {
+        "api-description": "升级武器<br>" + "equipmentId   : 武器的instanceId<br>" + "gamerId  : 用户id<br>" + "response : 'coinRemoved':升级武器的花销, 'equipment':升级后的equipment实例",
+        "api-endpoint": "/equipment/upgrade",
+        "api-parameters": {
+            "equipmentId": "",
+            "gamerId": ""
+        }
+    }
+};
+var equipmentAPINames = Object.keys(equipmentConfigs);
+jQuery.extend(apiConfigs, equipmentConfigs);
+
+// Chip
+var chipConfigs = {
+    "CHIP_SET": {
+        "api-description": "在某个英雄身上装配芯片, 提供英雄和芯片的definitionId<br>" + "chipId   : 芯片的instanceId<br>" + "chipIndex: 芯片槽位置 [0,1,...7]<br>" + "heroId   : 英雄的instanceId<br>" + "gamerId  : 用户id",
+        "api-endpoint": "/chip/set",
+        "api-parameters": {
+            "chipId": "",
+            "chipIndex": "",
+            "heroId": "",
+            "gamerId": ""
+        }
+
+    },
+    "CHIP_UNSET": {
+        "api-description": "卸下英雄身上的芯片, 提供英雄和芯片的instanceId<br>" + "chipId   : 芯片的instanceId<br>" + "heroId   : 英雄的instanceId<br>" + "gamerId  : 用户id",
+        "api-endpoint": "/chip/unset",
+        "api-parameters": {
+            "chipId": "",
+            "heroId": "",
+            "gamerId": ""
+        }
+    },
+    "CHIP_SELL": {
+        "api-description": "出售用户拥有的芯片, 提供芯片instanceId数组,测试时提供一个id<br>" + "chipIds: 芯片的instanceId数组<br>" + "gamerId  : 用户id" + "返回值: 'chipRemoved':[卖掉芯片id列表], 'coinAdded':活动的金钱",
+        "api-endpoint": "/chip/sell",
+        "api-parameters": {
+            "chipIds": "",
+            "gamerId": ""
+        }
+    },
+    "CHIP_FUSE": {
+        "api-description": "合成芯片<br>" + "chipDefinitionId   : 芯片的definitionId[230103]<br>" + "gamerId  : 用户id<br>" + "response : 'chipRemoved':[消耗的芯片id列表], 'chipAdded':{definitionId:新合成芯片的defineId, id:新合成芯片的instanceid",
+        "api-endpoint": "/chip/fuse",
+        "api-parameters": {
+            "chipDefinitionId": "",
+            "gamerId": ""
+        }
+    }
+};
+var chipAPINames = Object.keys(chipConfigs);
+jQuery.extend(apiConfigs, chipConfigs);
+
+// Pve
+var pveConfigs = {
+    "PVE_STATUS": {
+        "api-description": "获取pve的状态 <br>" + "gamerId: 玩家的Id <br>" + "Response: missionStates, 玩家mission的进度状态",
+        "api-endpoint": "/pve/status",
+        "api-parameters": {
+            "gamerId": ""
+        }
+    },
+    "PVE_FIGHT": {
+        "api-description": "pve推图, 一次战斗 <br>" + "gamerId: 玩家的Id <br>" + "missionId: 关卡Id, 101001, 101002, 101003, 101004<br>" + "Response: win, boolean, 是否获胜 <br>" + "result: number, 战斗评价, 1-5级 <br>" + "animation: array, 战斗过程 <br>" + "xpAdded: number, 基地获取的威望值, hero获得的经验值根据这个值换算 <br>" + "mission: object, 关卡最新的状态信息",
+        "api-endpoint": "/pve/fight",
+        "api-parameters": {
+            "gamerId": "",
+            "missionId": ""
+        }
+    },
+    "PVE_FIGHT_IN_ROW": {
+        "api-description": "pve推图, 连续战斗<br>" + "gamerId: 玩家的Id <br>" + "missionId: 关卡Id",
+        "api-endpoint": "/pve/fightInRow",
+        "api-parameters": {
+            "gamerId": "",
+            "missionId": ""
+        }
+    }
+};
+var pveAPINames = Object.keys(pveConfigs);
+jQuery.extend(apiConfigs, pveConfigs);
+
+// Pvp
+var pvpConfigs = {
+    "PVP_OPPONENTS": {
+        "api-description": "获取玩家的对手列表，提供gamerId <br>" + "gamerId: 玩家的Id <br>" + "Response: opponents, array, 对手列表, 每一个对手信息{id:12, name:12, xp:0, rank:1, leader: 1, beatYou: true} <br>" + "beatYou: boolean, 是否击败过你",
+        "api-endpoint": "/pvp/opponents",
+        "api-parameters": {
+            "gamerId": ""
+        }
+    },
+    "PVP_FIGHT": {
+        "api-description": "对战，提供gamerId+opponentId <br>" + "gamerId: 玩家的Id <br/>" + "opponentId: 对手的Id" + "opponentRank: 对手的排名 <br/>" + "Response: win, boolean, 是否获胜 <br>" + "result: number, 战斗评价, 1-5级 <br>" + "animation: array, 战斗过程 <br>" + "pvpStatus: object, 最新的pvp状态信息",
+        "api-endpoint": "/pvp/fight",
+        "api-parameters": {
+            "gamerId": "",
+            "opponentId": "",
+            "opponentRank": ""
+        }
+    },
+    "PVP_EXCHANGE_POINTS": {
+        "api-description": "兑换能量块，提供gamerId <br>" + "gamerId: 玩家的Id <br>" + "Response: pvpStatus: object, 最新的pvp状态信息 <br>" + "itemAdded: 增加的道具",
+        "api-endpoint": "/pvp/exchangePoints",
+        "api-parameters": {
+            "gamerId": ""
+        }
+    },
+    "PVP_STATUS": {
+        "api-description": "获取pvp状态，返回排名，可以兑换的积分，提供gamerId <br>" + "gamerId: 玩家的Id <br>" + "Response: points: number, 目前可以兑换的积分 <br>" + "rank: number, 玩家目前排名",
+        "api-endpoint": "/pvp/status",
+        "api-parameters": {
+            "gamerId": ""
+        }
+    },
+    "PVP_SPARK_OPPONENTS": {
+        "api-description": "列出技能碎片对象 <br />" + "gamerId: 玩家在某个服务器的唯一标记 <br />" + "sparkId: 碎片Id 请查看test/fixtures/configurations/items.csv 里itemType为61的id，比如202001 <br/>" + "response Data: [{opponents: 属性包括 'id','name','xp','level','leader' }]",
+        "api-endpoint": "/pvp/spark/opponents",
+        "api-parameters": {
+            "gamerId": "",
+            "sparkId": ""
+        }
+    },
+    "PVP_LIST_SPARKS": {
+        "api-description": "列出玩家spark一览 <br />" + "gamerId: 玩家在某个服务器的唯一标记 <br />" + "response data: {skillSparks: {skillSparksObject 属性包括 'definitionId', 'amount'}}",
+        "api-endpoint": "/pvp/spark/list",
+        "api-parameters": {
+            "gamerId": ""
+        }
+    },
+    "PVP_ROB_SPARK": {
+        "api-description": "技能碎片抢夺 <br />" + "gamerId: 玩家在某个服务器的唯一标记 <br />" + "opponentId: 对手的gamerId <br />" + "sparkId: 碎片Id 请查看test/fixtures/configurations/items.csv 里itemType为61的id，比如202001 <br />" + "response Data: {win: true/false, itemAdded: {itemsObject 属性包括 'id'(definitionId), 'amount', 'type'(hero或者item)}}",
+        "api-endpoint": "/pvp/spark/rob",
+        "api-parameters": {
+            "gamerId": "",
+            "opponentId": "",
+            "sparkId": ""
+        }
+    }
+};
+var pvpAPINames = Object.keys(pvpConfigs);
+jQuery.extend(apiConfigs, pvpConfigs);
+
+// Admin
+var adminConfigs = {
+    "GET_GAMER_INFO": {
+        "api-description": "获取Gamer的基本信息，可以选择提供mobageId+serverId或者gamerId <br>" + "mobageId: 玩家的梦宝谷Id <br/>" + "serverId: 玩家登录的服务器Id <br/>" + "gamerId: 玩家登陆某个服务器后获得的唯一标记 <br/>" + "返回值：r-->0表示成功，>0，表示errorCode，gamer的object",
+        "api-endpoint": "/admin/getGamerInfo",
+        "api-parameters": {
+            "mobageId": "",
+            "serverId": "",
+            "gamerId": ""
+        }
+    },
+    "REMOVE_GAMER": {
+        "api-description": "将某个玩家删除掉<br/>" + "gamerId: 玩家在某个服务器的唯一标记 <br/>" + "removeMissionProgress: 是否同时移除任务进度, 0: 否, 1: 是 <br/>",
+        "api-endpoint": "/admin/removeGamer",
+        "api-parameters": {
+            "gamerId": "",
+            "removeMissionProgress": ""
+        }
+    },
+    "SET_GAMER_XP": {
+        "api-description": "为玩家增加xp，<br/>" + "gamerId: 玩家在某个服务器的唯一标记 <br/>" + "xp: 将玩家的xp设置的数值，需要>0",
+        "api-endpoint": "/admin/setGamerXP",
+        "api-parameters": {
+            "gamerId": "",
+            "xp": ""
+        }
+    },
+    "ADD_GAMER_COIN": {
+        "api-description": "为玩家增加太空币，<br/>" + "gamerId: 玩家在某个服务器的唯一标记 <br/>" + "coin: 为玩家增加的的太空币，需要>0",
+        "api-endpoint": "/admin/addGamerCoin",
+        "api-parameters": {
+            "gamerId": "",
+            "coin": ""
+        }
+    },
+    "ADD_GAMER_TICKET": {
+        "api-description": "为玩家增加太空券，<br/>" + "gamerId: 玩家在某个服务器的唯一标记 <br/>" + "ticket: 为玩家增加的太空券，需要>0",
+        "api-endpoint": "/admin/addGamerTicket",
+        "api-parameters": {
+            "gamerId": "",
+            "ticket": ""
+        }
+    },
+    "GET_HERO_LIST": {
+        "api-description": "获取玩家的英雄列表，<br/>" + "gamerId:玩家在某个服务器的唯一标记",
+        "api-endpoint": "/admin/getHeroList",
+        "api-parameters": {
+            "gamerId": ""
+        }
+    },
+    "GET_COMBINER_LIST": {
+        "api-description": "获取玩家的组合金刚列表， <br/>" + "gamerId:玩家在某个服务器的唯一标记",
+        "api-endpoint": "/admin/getCombinerList",
+        "api-parameters": {
+            "gamerId": ""
+        }
+    },
+    "ADD_HERO": {
+        "api-description": "为玩家增加英雄， <br/>" + "gamerId : 玩家在某个服务器的唯一标记 <br/>" + "heroDefId : 英雄的定义ID",
+        "api-endpoint": "/admin/addHero",
+        "api-parameters": {
+            "gamerId": "",
+            "heroDefId": ""
+        }
+    },
+    "ADD_TECH": {
+        "api-description": "为玩家增加科技， <br/>" + "gamerId : 玩家在某个服务器的唯一标记 <br/>" + "techId : 科技的定义ID",
+        "api-endpoint": "/admin/addTech",
+        "api-parameters": {
+            "gamerId": "",
+            "techId": ""
+        }
+    },
+    "REMOVE_HERO": {
+        "api-description": "从玩家英雄队列中删除一个英雄，<br/>" + "gamerId : 玩家在某个服务器的唯一标记 <br/>" + "heroId : 英雄的实例ID",
+        "api-endpoint": "/admin/removeHero",
+        "api-parameters": {
+            "gamerId": "",
+            "heroId": ""
+        }
+    },
+    "SET_HERO_XP": {
+        "api-description": "为玩家的某个英雄来设置xp <br/>" + "gamerId: 玩家在某个服务器的唯一标记 <br/>" + "heroId: 玩家的heroId <br/>" + "xp:为这个玩家的hero设置的xp",
+        "api-endpoint": "/admin/setHeroXP",
+        "api-parameters": {
+            "gamerId": "",
+            "heroId": "",
+            "xp": ""
+        }
+    },
+    "GET_ITEM_LIST": {
+        "api-description": "获取玩家的道具列表，<br/>" + "gamerId: 玩家在某个服务器的唯一标记 <br/>" + "itemType: 道具的类型, 0-火种，1-装备，2-技能，3-芯片，4-一般性道具, 5-技能碎片",
+        "api-endpoint": "/admin/getItemList",
+        "api-parameters": {
+            "gamerId": "",
+            "itemType": ""
+        }
+    },
+    "ADD_ITEM": {
+        "api-description": "为玩家增加一个道具，<br/>" + "gamerId: 玩家在某个服务器的唯一标记 <br/>" + "itemType: 道具的类型, 0-火种，1-装备，2-技能，3-芯片，4-一般性道具, 5-技能碎片<br/>" + "itemDefId: 道具的definition Id <br/>" + "amount: 增加道具的数量",
+        "api-endpoint": "/admin/addItem",
+        "api-parameters": {
+            "gamerId": "",
+            "itemType": "",
+            "itemDefId": "",
+            "amount": ""
+        }
+    },
+    "REMOVE_ITEM": {
+        "api-description": "从玩家的道具列表中删除一个道具 <br/>" + "gamerId: 玩家在某个服务器的唯一标记 <br/>" + "itemType: 道具的类型, 0-火种，1-装备，2-技能，3-芯片，4-一般性道具, 5-技能碎片<br/>" + "itemId: 道具的编号，对于碎片，芯片和火种，这个值表示itemDefId<br/>" + "amount: 针对火种，碎片这类数量道具的清除数量",
+        "api-endpoint": "/admin/removeItem",
+        "api-parameters": {
+            "gamerId": "",
+            "itemType": "",
+            "itemId": "",
+            "amount": ""
+        }
+    },
+    "SET_SKILL_XP": {
+        "api-description": "为玩家拥有的某个技能设置xp <br/>" + "gamerId: 玩家在某个服务器的唯一标记 <br/>" + "skillId: 玩家的skillId <br/>" + "xp:为这个玩家的技能设置的xp",
+        "api-endpoint": "/admin/setSkillXP",
+        "api-parameters": {
+            "gamerId": "",
+            "skillId": "",
+            "xp": ""
+        }
+    },
+    "LEVELUP_EQUIPMENT": {
+        "api-description": "为玩家拥有的某个装备升级<br/>" + "gamerId: 玩家在某个服务器的唯一标记 <br/>" + "equipId: 玩家的装备Id <br/>",
+        "api-endpoint": "/admin/levelupEquipment",
+        "api-parameters": {
+            "gamerId": "",
+            "equipId": ""
+        }
+    },
+    "GET_IN_PVP_LB": {
+        "api-description": "为玩家新进入pvp leaderboard<br/>" + "gamerId: 玩家在某个服务器的唯一标记",
+        "api-endpoint": "/admin/getInPvpLB",
+        "api-parameters": {
+            "gamerId": ""
+        }
+    },
+    "UPDATE_SERVER": {
+        "api-description": "创建或修改逻辑服的信息<br/>" + "id: 逻辑服唯一标记<br/>" + "name: 逻辑服唯一名字<br/>" + "url: 逻辑服指向gamer server url<br/>" + "status: 逻辑服状态 0: init, 1: busy, 2: idle, 3:new, 9: maintain<br/>" + "allowNew: 逻辑服是否允许新玩家进入 1: true, 0: false",
+        "api-endpoint": "/admin/updateServer",
+        "api-parameters": {
+            "id": "",
+            "name": "",
+            "url": "",
+            "status": "",
+            "allowNew": ""
+        }
+    }
+};
+var adminAPINames = Object.keys(adminConfigs);
+jQuery.extend(apiConfigs, adminConfigs);
+
+var apiNames = Object.keys(apiConfigs);
+
+var apiSelectedClassName = "api-title-selected";
+
+$(document).ready(function() {
+    $('[data-toggle=offcanvas]').click(function() {
+        $('.row-offcanvas').toggleClass('active');
+    });
+    
+    // Gateway
+    appendAPITitle("Gateway");
+    appendAPINames(gatewayAPINames);
+    // Basement
+    appendAPITitle("基地");
+    appendAPINames(basementAPINames);
+    // Hero
+    appendAPITitle("英雄");
+    appendAPINames(heroAPINames);
+    // Skill
+    appendAPITitle("技能");
+    appendAPINames(skillAPINames);
+    // Equipment
+    appendAPITitle("装备");
+    appendAPINames(equipmentAPINames);
+    // Chip
+    appendAPITitle("芯片");
+    appendAPINames(chipAPINames);
+    // Pve
+    appendAPITitle("Pve推图");
+    appendAPINames(pveAPINames);
+    // Pvp
+    appendAPITitle("Pvp对战");
+    appendAPINames(pvpAPINames);
+    // Admin
+    appendAPITitle("Admin工具");
+    appendAPINames(adminAPINames);
+    
+    var html = "<a href=\"javascript:void(0);\" class=\"list-group-item active api-title-end\">End</a>";
+    $("#list-api").append(html);
+
+    $(".api-title").click(function() {
+        if (!$(this).hasClass(apiSelectedClassName)) {
+            hideAPINames();
+        }
+        toggleAPINames(this);
+        jQuery.each($("." + apiSelectedClassName), function(index, item) {
+            $(item).removeClass(apiSelectedClassName);
+        });
+        $(this).addClass(apiSelectedClassName);
+    });
+    
+    $(".api-item").click(function() {
+        switchAPI(this);
+    });
+    
+    $(".api-call").click(function() {
+        callAPI();
+    });
+    
+    hideAPINames();
+    
+    var apiSearchSources = [];
+    apiNames.forEach(function(name) {
+        apiSearchSources.push({name: name});
+    });
+    $("#api-search-input").typeahead({
+        source: apiSearchSources,
+        itemSelected: function(item, value, text){
+            switchAPI($("#" + text));
+            $("#api-search-input").val(function(index, value) {
+                return "";
+            });
+        }
+    });
+});
+
+var appendAPITitle = function(name) {
+    var html = "<a href=\"javascript:void(0);\" class=\"list-group-item active api-title\">" + name + "</a>";
+    $("#list-api").append(html);
+};
+
+var appendAPINames = function(names) {
+    names.forEach(function(name) {
+        var api = "<a href=\"javascript:void(0);\" class=\"list-group-item api-item\" id=\"" + name + "\">" + name + "</a>";
+        $("#list-api").append(api);
+    });
+};
+
+var hideAPINames = function() {
+    jQuery.each($(".api-item"), function(index, item) {
+        $(item).hide();
+    });
+};
+
+var toggleAPINames = function(title) {
+    var next = $(title).next();
+    if (next.hasClass("active")) {
+        return;
+    }
+    next.toggle("fast");
+    toggleAPINames(next);
+};
+
+var switchAPI = function(item) {
+    var apiName = $(item).html();
+    
+    var config = apiConfigs[apiName];
+    var apiEndpoint = config["api-endpoint"];
+    var apiParameters = config['api-parameters'];
+    
+    var html = "";
+    for (var i in apiParameters) {
+        html += "<div class=\"form-group\"><label class=\"col-sm-3 control-label\">" + i + "</label><div class=\"col-sm-5\">";
+        html += "<input class=\"form-control param-input\" id=\"param-" + i + "\">";
+        html += "</div></div>";
+    }
+    
+    // html += "<input class=\"param-input\" id=\"param-req\" value=\"" + apiName + "\" type=\"hidden\">";
+    html += "<input class=\"param-input\" id=\"param-endpoint\" value=\"" + apiEndpoint + "\" type=\"hidden\">";
+    // html += "<input class=\"param-input\" id=\"param-app\" value=\"Pnotify\" type=\"hidden\">";
+
+    $('#api-description').html(config['api-description']);
+    $('#api-endpoint').html(config['api-endpoint']);
+    $('#api-form').html(html);
+    $("#api-response").html("");
+};
+
+var callAPI = function() {
+    var apiEndpoint = "";
+    var params = {};
+
+    $(".param-input").each(function() {
+        var id = $(this).attr("id");
+        if (id == "param-endpoint") {
+            apiEndpoint = $(this).val();
+        } else {
+            var name = id.split("-")[1];
+            params[name] = $(this).val();
+        }
+    });
+
+    if (!jQuery.isEmptyObject(params)) {
+        $.post(apiEndpoint, params,
+            function(data) {
+                $('#api-response').html("<pre class=\"prettyprint linenums Lang-js\">" + JSON.stringify(data, null, 4) + "</pre>");
+                // $('#api-response').html("<code class=\"prettyprint linenums Lang-js\">" + JSON.stringify(data, null, 4) + "</code>");
+                return;
+            }
+        );
+    }
+    return;
+};

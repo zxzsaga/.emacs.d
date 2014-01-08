@@ -1,0 +1,41 @@
+extend ../layout
+
+block content
+  h1 Announcement List
+  table.table.table-hover.table-condensed
+    thead
+      tr
+        th id
+        th serverId
+        th title
+        th content
+        th sort
+        th createdAt
+        th link
+        th show
+        th broadcast
+        th hot
+        th action
+    tbody
+      each announcement in announcements
+        tr
+          th #{ announcement._id}        
+          th #{ announcement.serverId }
+          th #{ announcement.title }
+          th #{ announcement.content }
+          th #{ announcement.sort }
+          th #{ announcement.createdAt }
+          th #{ linkTable[announcement.link] }
+          th #{ boolTable[announcement.show] }
+          th #{ boolTable[announcement.broadcast] }
+          th #{ boolTable[announcement.hot] }
+          th
+            .btn-group
+              button.btn.btn-default.btn-xs.dropdown-toggle(type='button', data-toggle='dropdown') Actions
+                span.caret
+              ul.dropdown-menu(role='menu')
+                li
+                  a(href='/admin/announcement/update/#{ announcement._id }') Modify
+                li
+                  a(href='/admin/announcement/destroy/#{ announcement._id }', onclick="return confirm('Are you sure ?!');") Remove
+  a.btn.btn-default(type='button', href='/admin/announcement/new') Create

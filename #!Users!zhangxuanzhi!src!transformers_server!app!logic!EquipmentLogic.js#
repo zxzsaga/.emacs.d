@@ -1,0 +1,282 @@
+'use strict';
+
+var Gamer           = require(appModules.models.Gamer);
+var Hero            = require(appModules.models.Hero);
+var Equipment       = require(appModules.models.Equipment);
+var Skill           = require(appModules.models.Skill);
+
+/**
+ * 出售equipment, ids可以是[1, 2, 3]的数组 / ids可以是单个id
+ *
+ * @callback cb
+ * @param {gamer} gamer - gamer instance.
+ * @param {(equipment|equipment[])} equipmentInstances - equipment instance or an array of equipment instances.
+ */
+var sellEquipment = function(gamer, equipmentInstances, cb) {
+    var result;
+    var updates = {};
+    var equipmentRemovedIds = [];
+    var price = 0;
+    
+    if (!(equipmentInstances instanceof Array)) {
+        equipmentInstances = [equipmentInstances];
+    }
+    
+    for (var i = 0; i < equipmentInstances.length; i++) {
+        var equipmentInstance = equipmentInstances[i];
+        if (!(equipmentInstance instanceof Equipment)) {
+            return cb(new TFError(ErrorCodes.INVALID_OBJECT, 'EquipmentLogic#sellEquipment, invalid object'));
+        }
+        result = $removeEquipment(updates, gamer, equipmentInstance);
+        if (result instanceof TFError) {
+            cb(result);
+            return;
+        }
+        price += equipmentInstance.price();
+        equipmentRemovedIds.push(equipmentInstance.id);
+    }
+    
+    result = gamer.incCoin(updates, price);
+    if (result instanceof TFError) {
+        cb(result);
+        return;
+    }
+    
+    var GamerDAO = app.GamerDAO;
+    GamerDAO.updateById(gamer.id, updates, function(err, updatedDoc) {
+        if (err) {
+            cb(new TFError(ErrorCodes.MONGO_DB_ERROR, 'EquipmentLogic#sellEquipment, mongodb error: ' + JSON.stringify(err)));
+            return;
+        }
+        var gamer = new Gamer(updatedDoc);
+        cb(null, {'data':{'equipmentRemoved':equipmentRemovedIds, 'coinAdded':price}});
+        return;
+    });
+};
+exports.sellEquipment = sellEquipment;
+
+
+/**
+ * 升级equipment, 花费金钱
+ *
+ * @callback cb
+ * @param {gamer} gamer - gamer instance.
+ * @param {equipmentInstance} equipmentInstance - equipment instance
+ */
+var upgradeEquipment = function(gamer, equipmentInstance, cb) {
+    var result;
+    var updates = {};
+
+    if (!(equipmentInstance instanceof Equipment)) {
+        return cb(new TFError(ErrorCodes.INVALID_OBJECT, "EquipmentLogic#upgradeEquipment, param is not a type of Equipment"));
+    }
+
+    if (!equipmentInstance.canLevelUp())
+    {
+        return cb(new TFError(ErrorCodes.ALREADY_MAX_LEVEL, "EquipmentLogic#upgradeEquipment, equipment already reach the max level."));
+    }
+
+    var equipmentLevelDef = equipmentInstance.levelDefinition();
+    var upgradeCost = equipmentInstance.levelUpCost();
+    var gamerCoin = gamer.getCoin();
+
+    if (upgradeCost > gamerCoin)
+    {
+        // NOT_ENOUGH_ITEM
+        return cb(new TFError(ErrorCodes.NOT_ENOUGH_COIN, "EquipmentLogic#upgradeEquipment, equipment need more coin to upgrade"));
+    }
+
+
+    result = equipmentInstance.levelUp(updates);
+
+    if (result instanceof TFError) {
+        cb(result);
+        return;
+    }
+
+    var GamerDAO = app.GamerDAO;
+    GamerDAO.updateById(gamer.id, updates, function(err, updatedDoc) {
+        if (err) {
+            cb(new TFError(ErrorCodes.MONGO_DB_ERROR, 'EquipmentLogic#sellEquipment, mongodb error: ' + JSON.stringify(err)));
+            return;
+        }
+        var gamer = new Gamer(updatedDoc);
+        var updatedEquipment = gamer.getEquipment(equipmentInstance.id);
+        // todo , return coin and the upgraded equipment.
+        cb(null, {'data':{'coinRemoved':upgradeCost, 'equipment':equipmentInstance.toDoc()}});
+        return;
+    });
+};
+exports.upgradeEquipment = upgradeEquipment;
+
+/**
+ * 穿上equipment
+ *
+ * @callback cb
+ * @param {gamer} gamer - gamer instance.
+ * @param {hero} heroInstance - hero instance.
+ * @param {equipment} equipmentInstance - equipment instance.
+ * @param {number} equipmentIndex - equipment index.
+ */
+var wearEquipment = function(gamer, heroInstance, equipmentInstance, equipmentIndex, cb) {
+    var result;
+    var updates = {};
+
+    if (!(heroInstance instanceof Hero) || !(equipmentInstance instanceof Equipment)) {
+        return cb(new TFError(ErrorCodes.INVALID_OBJECT, 'EquipmentLogic#wearEquipment, invalid object'));
+    }
+    
+    if (!$validTypeForIndex(equipmentInstance, equipmentIndex)) {
+        return cb(new TFError(ErrorCodes.INVALID_EQUIPMENT_INDEX, 'EquipmentLogic#wearEquipment, invalid equipment index: ' + equipmentIndex));
+    }
+
+    // 穿上
+    result = heroInstance.wearEquipment(updates, equipmentInstance, equipmentIndex);
+    if (result instanceof TFError) {
+        return cb(result);
+    }
+
+    // 已经装备到某个Hero身上时卸下
+    var hero2 = equipmentInstance.hero();
+    if (hero2 instanceof Hero) {
+        result = hero2.takeEquipment(updates, equipmentInstance);
+        if (result instanceof TFError) {
+            return cb(result);
+        }
+    }
+    
+    var GamerDAO = app.GamerDAO;
+    GamerDAO.updateById(gamer.id, updates, function(err, updatedDoc) {
+        if (err) {
+            cb(new TFError(ErrorCodes.MONGO_DB_ERROR, 'EquipmentLogic#wearEquipment, mongodb error: ' + JSON.stringify(err)));
+            return;
+        }
+
+        cb(null, {});
+        return;
+    });
+};
+
+exports.wearEquipment = wearEquipment;
+
+/**
+ * 卸下equipment
+ *
+ * @callback cb
+ * @param {gamer} gamer - gamer instance.
+ * @param {hero} heroInstance - hero instance.
+ * @param {equipment} equipmentInstance - equipment instance.
+ */
+var takeEquipment = function(gamer, heroInstance, equipmentInstance, cb) {
+    var result;
+    var updates = {};
+    
+    if (!(heroInstance instanceof Hero) || !(equipmentInstance instanceof Equipment)) {
+        cb(new TFError(ErrorCodes.INVALID_OBJECT, 'EquipmentLogic#takeEquipment, invalid object'));
+        return;
+    }
+    
+    var result = heroInstance.takeEquipment(updates, equipmentInstance);
+    if (result instanceof TFError) {
+        return cb(result);
+    }
+    
+    var GamerDAO = app.GamerDAO;
+    GamerDAO.updateById(gamer.id, updates, function(err, updatedDoc) {
+        if (err) {
+            cb(new TFError(ErrorCodes.MONGO_DB_ERROR, 'EquipmentLogic#takeEquipment, mongodb error: ' + JSON.stringify(err)));
+            return;
+        }
+
+        cb(null, {});
+        return;
+    });
+};
+
+exports.takeEquipment = takeEquipment;
+
+// ================
+// = 可复用的Logic =
+// ================
+
+/**
+ * equipment index是否和equipment type对应
+ *
+ * @param {number} index - chip index.
+ * @return {boolean} true/false.
+ */
+var $validTypeForIndex = function(equipmentInstance, index) {
+    return Constants.HERO.EQUIPMENT_TYPE_INDICES[equipmentInstance.type] == parseInt(index);
+};
+
+/**
+ * 增加equipment
+ *
+ * @param {object} updates - {}.
+ * @param {gamer} gamer - an instance of Gamer.
+ * @param {number} definitionId - equipment definitionId.
+ */
+var $addEquipment = function(updates, gamer, definitionId, level) {
+    var result;
+    updates = updates || {};
+    level = level || 1;
+
+    definitionId = parseInt(definitionId);
+    var definition = app.configs.items.getDefinition(definitionId);
+    if (!definition) {
+        return new TFError(ErrorCodes.INVALID_DEFINITION_ID, 'EquipmentLogic#addEquipment 1, invalid definition id: ' + definitionId);
+    }
+        
+    if (definition.itemType != Constants.ITEM.TYPE.EQUIPMENT) {
+        return new TFError(ErrorCodes.INVALID_TYPE, 'EquipmentLogic#addEquipment 2, invalid definition type: ' + definition.itemType);
+    }
+        
+    if ((typeof level) != 'number') {
+        return new TFError(ErrorCodes.INVALID_TYPE, 'EquipmentLogic#addEquipment 3, invalid level type, expected: number, actually: ' + (typeof level));
+    }
+
+    var doc = Equipment.doc(gamer.nextEquipmentId(), definition, level);
+    var equipmentInstance = new Equipment(doc, gamer);
+    if (!equipmentInstance.schema.valid) {
+        return equipmentInstance.schema.error;
+    }
+        
+    result = gamer.addEquipment(updates, equipmentInstance);
+    if (result instanceof TFError) {
+        return result;
+    }
+    return equipmentInstance;
+};
+exports.$addEquipment = $addEquipment;
+
+/**
+ * 删除equipment
+ *
+ * @param {object} updates - {}.
+ * @param {gamer} gamer - an instance of Gamer.
+ * @param {equipment} equipmentInstance - equipment instance.
+ */
+var $removeEquipment = function(updates, gamer, equipmentInstance) {
+    var result;
+    updates = updates || {};
+    
+    if (!(equipmentInstance instanceof Equipment)) {
+        new TFError(ErrorCodes.INVALID_OBJECT, 'EquipmentLogic#removeEquipment, invalid object');
+        return;
+    }
+    
+    // 从hero上卸下
+    if (equipmentInstance.hero()) {
+        var result = equipmentInstance.hero().takeEquipment(updates, equipmentInstance);
+        if (result instanceof TFError) {
+            return result;
+        }
+    }
+    
+    result = gamer.removeEquipment(updates, equipmentInstance);
+    if (result instanceof TFError) {
+        return result;
+    }
+    return true;
+};
+exports.$removeEquipment = $removeEquipment;
