@@ -1,6 +1,0 @@
-extend ../layout
-
-block content
-  h1 Show Gamer #{ _id }
-  #api-response
-    pre.prettyprint.linenums.Lang-js #{ foundDoc }
