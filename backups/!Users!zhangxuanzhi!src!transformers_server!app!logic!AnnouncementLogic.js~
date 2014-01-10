@@ -4,7 +4,19 @@ var Gamer = require(appModules.models.Gamer);
 
 /**
  * 获取announcement
+ * @callback cb
+ * @param {gamer} gamer - gamer instance
  */
-var getAnnouncement = function(gamer, cb) {
-    var AnnouncementDAO = app.GamerDAO;
+var listAnnouncement = function(gamer, cb) {
+    var AnnouncementDAO = app.AnnouncementDAO;
+    app.AnnouncementDAO.find({ show: true }, function(err, foundDocs) {
+        if (err) {
+            cb(new TFError(ErrorCodes.MONGO_DB_ERROR, 'AnnouncementLogic#listAnnouncement, mongodb error: ' + JSON.stringify(err)));
+            return;
+        }
+        cb(null, foundDocs);
+        return;
+    });
 };
+
+exports.listAnnouncement = listAnnouncement;

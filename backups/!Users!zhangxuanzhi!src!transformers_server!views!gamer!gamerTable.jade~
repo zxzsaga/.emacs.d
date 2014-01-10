@@ -1,0 +1,21 @@
+block gamerTable
+  table.table.table-hover.table-condensed
+    thead
+      tr
+        th gamerId
+        th name
+        th xp
+        th coin
+        th energy
+        th ticket.free
+        th ticket.pay
+    tbody
+      each gamer in gamers
+        tr(onclick="location.href='/admin/gamer/show/#{ gamer._id }'", style="cursor: pointer;")
+          th #{ gamer._id }
+          th #{ gamer.name }
+          th #{ gamer.xp }
+          th #{ gamer.coin }
+          th #{ gamer.energy }
+          th #{ gamer.ticket.free }
+          th #{ gamer.ticket.pay }

@@ -36,7 +36,6 @@ html(lang='en')
                   a(href='/admin/update') Update
                   a(href='/admin/logout') Logout
     .container
-      - var boolTable = { 0: 'false', 1: 'true'};
       block content
       hr
       footer

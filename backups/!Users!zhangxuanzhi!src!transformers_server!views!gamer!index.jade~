@@ -1,0 +1,18 @@
+extend ../layout
+
+block content
+  h1 Gamer
+  .row
+    form.col-lg-3(action='/admin/gamer/search', method='post')
+      .form-group
+        label ServerId:
+        input.form-control(type='text', name='serverId')
+      .form-group
+        label MobageId:
+        input.form-control(type='text', name='mobageId')
+      button.btn.btn-default(type='submit') Search
+  br
+  p.text-info #{ searchStatus }
+  if gamers
+    include gamerTable
+    include reward
