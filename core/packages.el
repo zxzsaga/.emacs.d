@@ -6,7 +6,9 @@
 (package-initialize)
 
 (defvar packages
-  '(dash)
+  '(dash
+    diminish
+    undo-tree)
   "A list of packages to ensure are installed at launch.")
 
 (defun check-packages-installed-p ()

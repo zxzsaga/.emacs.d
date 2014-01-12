@@ -17,6 +17,10 @@
 (setq-default indent-tabs-mode nil)   ;; don't use tabs to indent
 (setq-default tab-width 8)            ;; but maintain correct appearance
 
+;; sensible undo
+(global-undo-tree-mode)
+(diminish 'undo-tree-mode)
+
 ;; delete the selection with a keypress
 (delete-selection-mode t)
 
