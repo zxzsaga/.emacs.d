@@ -22,6 +22,8 @@
 
 (unless (file-exists-p savefile-dir)
   (make-directory savefile-dir))
+(unless (file-exists-p backup-dir)
+  (make-directory backup-dir))
 
 (defun add-subfolders-to-load-path (parent-dir)
   "Add all level PARENT-DIR subdirs to the `load-path'."
