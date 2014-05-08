@@ -1,1 +1,4 @@
 * 配置
+#+begin_src
+var current-user = (system-type === "windows-nt") ? "USERNAME" : "USER"
+#+end_src
