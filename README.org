@@ -1,7 +1,5 @@
 * 配置
-emacs 版本需要大于 24.1
-
-变量：
+** 环境变量
 | root-dir          | .                 | 配置文件根目录               |
 | core-dir          | ./core            | 核心函数目录                 |
 | modules-dir       | ./modules         | 模块目录                     |
@@ -10,11 +8,16 @@ emacs 版本需要大于 24.1
 | savefile-dir      | ./savefile        | 存放自动生成的文件的目录     |
 | backup-dir        | ./backups         | 存放备份文件的目录           |
 | load-modules-file | ./load-modules.el | 列出将要载入的模块名         |
+** 配置流程
 #+BEGIN_SRC
 var current-user = (system-type === "windows-nt") ? "USERNAME" : "USER";
-custom-theme-directory = themes-dir;
 #+END_SRC
+验证 Emacs 版本是否不低于 24.1。
+
+配置上述8个环境变量
+设置 =custom-theme-directory = themes-dir=
 如果 =savafile-dir= 或者 =backup-dir= 不存在，则创建它们。
+定义函数：
 #+BEGIN_SRC
 function add-subfolders-to-load-path(parent-dir) {
     // 递归的添加 parant-dir 下的文件名到 load-path
@@ -25,6 +28,8 @@ function add-subfolders-to-load-path(parent-dir) {
 add-subfolders-to-load-path(vendor-dir)
 #+END_SRC
 将默认的每 0.76MB 清理一次垃圾，改为 50MB。
+
+加载 =core-dir= 下面的除了 osx.el 以外的6个文件：
 #+BEGIN_SRC
 (require 'packages)
 (require 'ui)
@@ -32,8 +37,14 @@ add-subfolders-to-load-path(vendor-dir)
 (require 'mode)
 (require 'editor)
 (require 'global-keybindings)
+#+END_SRC
+如果是 darwin 系统，则加载 osx.el：
+#+BEGIN_SRC
 (when (eq system-type 'darwin)
   (require 'osx))
+#+END_SRC
+如果 =load-modules-file= 存在，则加载它：
+#+BEGIN_SRC
 (when (file-exists-p load-modules-file)
   (load load-modules-file))
 #+END_SRC
