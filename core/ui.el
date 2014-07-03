@@ -42,9 +42,9 @@
 
 ;; 在mac下显示中文字体
 (set-fontset-font
-(frame-parameter nil 'font)
-'han
-(font-spec :family "Hiragino Sans GB" ))
+ (frame-parameter nil 'font)
+ 'han
+ (font-spec :family "Hiragino Sans GB" ))
 
 (provide 'ui)
 ;;; prelude-ui.el ends here

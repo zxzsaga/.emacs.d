@@ -15,8 +15,11 @@ var current-user = (system-type === "windows-nt") ? "USERNAME" : "USER";
 验证 Emacs 版本是否不低于 24.1。
 
 配置上述8个环境变量
+
 设置 =custom-theme-directory = themes-dir=
+
 如果 =savafile-dir= 或者 =backup-dir= 不存在，则创建它们。
+
 定义函数：
 #+BEGIN_SRC
 function add-subfolders-to-load-path(parent-dir) {

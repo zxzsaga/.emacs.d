@@ -1,0 +1,868 @@
+'use strict';
+
+var fs                  = require('fs');
+var async               = require('async');
+var AdminBaseController = require('./AdminBaseController');
+var Gamer               = require(appModules.models.Gamer);
+var Hero                = require(appModules.models.Hero);
+var Skill               = require(appModules.models.Skill);
+var Reward              = require(appModules.logic.Reward);
+var AdminLogic          = require(appModules.logic.AdminLogic);
+var MessageLogic        = require(appModules.logic.MessageLogic);
+var MongoUtil           = require(appModules.util.MongoUtil);
+
+function AdminGamerController() {
+    AdminGamerController.super_.call(this);
+    var self = this;
+
+    var GamerDAO = app.GamerDAO;
+    var PurchaseInfoDAO = app.PurchaseInfoDAO;
+    var MissionProgressDAO = app.MissionProgressDAO;
+    var PersonalMessageDAO = app.PersonalMessageDAO;
+    var HornMessageDAO = app.HornMessageDAO;
+
+    var rewardLock = false;
+
+  
+
+    this.action('admin/gamer/index', function(req, res, cb) {
+        app.ServerDAO.find({}, function(err, servers) {
+            if (err) {
+                return self.sendErrorResponse(err, res, cb);
+            }
+            res.render('gamer/index.jade', { servers: servers });
+            return cb();
+        });
+    });
+
+    this.action('admin/gamer/show', function(req, res, cb) {
+        GamerDAO.findOneByGamerId(req.params.id, function(err, foundGamer) {
+            var foundDoc = foundGamer.doc;
+            var gamerDetail = {
+                equipments: [],
+                skills: [],
+                heroes: []
+            };
+            var itemIdNameTable = foundGamer.configs.items.toAdmin();
+            for (var equipId in foundDoc.equipments) {
+                var equipInfo = foundDoc.equipments[equipId];
+                var equipIdNameObj = itemIdNameTable.equipmentById[equipInfo.definitionId.toString()];
+                if (equipIdNameObj) {
+                    equipInfo.name = equipIdNameObj.name;
+                }
+                else {
+                    equipInfo.name = '名字缺失';
+                }
+                gamerDetail.equipments.push(equipInfo);
+            }
+            for (var skillId in foundDoc.skills) {
+                var skillInfo = foundDoc.skills[skillId];
+                var skillIdNameObj = itemIdNameTable.skillById[skillInfo.definitionId.toString()];
+                if (skillIdNameObj) {
+                    skillInfo.name = skillIdNameObj.name;
+                }
+                else {
+                    skillInfo.name = '名字缺失';
+                }
+                var thisSkill = new Skill(skillInfo, foundGamer);
+                try {
+                    skillInfo.level = thisSkill.level();
+                } catch (err) {
+                    skillInfo.level = undefined;
+                }
+                gamerDetail.skills.push(skillInfo);
+            }
+            for (var heroId in foundDoc.heroes) {
+                // var thisHero = foundDoc.heroes[heroId];
+                var thisHero = new Hero(foundDoc.heroes[heroId], foundGamer);
+                var heroInfo = {};
+                heroInfo.id           = thisHero.id;
+                heroInfo.definitionId = thisHero.definitionId;
+                heroInfo.name         = foundGamer.configs.heroes.getName(heroInfo.definitionId);
+                heroInfo.star         = thisHero.star;
+                heroInfo.xp           = thisHero.xp;
+                heroInfo.level        = thisHero.level();
+                heroInfo.status       = thisHero.statusFinal();
+                heroInfo.skills       = [];
+                thisHero.skills.forEach(function(skillId, index, skills) {
+                    if (skillId !== null) {
+                        heroInfo.skills.push({
+                            "definitionId": foundGamer.skills[skillId].definitionId,
+                            "xp": foundGamer.skills[skillId].xp
+                        });
+                    }
+                    else {
+                        heroInfo.skills.push({});
+                    }
+                });
+                gamerDetail.heroes.push(heroInfo);
+            }
+            gamerDetail.items = {};
+            for (var itemId in foundDoc.items) {
+                gamerDetail.items[itemId] = {
+                    amount: foundDoc.items[itemId],
+                    name: foundGamer.configs.items.getName(itemId)
+                }
+            }
+            res.render('gamer/show.jade', { "gamerId": foundDoc._id, "gamerDetail": gamerDetail });
+            return cb();
+        });    
+    });
+
+    this.action('admin/gamer/reward', function(req, res, cb) {
+        if (rewardLock === true) {
+            return res.send('reward is still processing');
+        }
+        var latestConf = app.allConfigs.getLatestConfig();
+        var content = latestConf.items.toAdmin();
+        content.heroById = latestConf.heroes.toAdmin();
+        content.packById = latestConf.doc.stores.getItemPacks();
+        content.ticketId = Constants.ITEM.ID.TICKET_ITEM_ID;
+        content.coinId = Constants.ITEM.ID.COIN_ITEM_ID;
+        content.reward_types = ['pack','ticket','coin','skill','equipment','chip','heroSpark','skillSpark','items'];
+        app.ServerDAO.find({}, function(err, servers) {
+            if (err) return self.sendErrorResponse(err, res, cb);
+            res.render('gamer/reward.jade', { content: content, servers: servers });
+            return cb();
+        });
+    });
+
+    this.action('admin/gamer/rewardLog', function(req, res, cb) {
+        res.render('gamer/rewardLogSearch.jade');
+        return cb();
+    });
+
+    this.action('admin/gamer/cardSearch', function(req, res, cb) {
+        res.render('gamer/cardSearch.jade');
+        return cb();
+    });
+    
+    this.action('admin/gamer/itemSearch', function(req, res, cb) {
+        res.render('gamer/itemSearch.jade');
+        return cb();
+    });
+
+    this.action('admin/gamer/equipmentSearch', function(req, res, cb) {
+        res.render('gamer/equipmentSearch.jade');
+        return cb();
+    });
+
+    this.action('admin/gamer/skillSearch', function(req, res, cb) {
+        res.render('gamer/skillSearch.jade');
+        return cb();
+    });
+
+    this.action('admin/gamer/personalMessage', function(req, res, cb) {
+        res.render('gamer/personalMessageSearch.jade');
+        return cb();
+    });
+
+    this.action('admin/gamer/hornMessage', function(req, res, cb) {
+        res.render('gamer/hornMessageSearch.jade');
+        return cb();
+    });
+
+    this.action('admin/gamer/loginForbid', function(req, res, cb) {
+        res.render('gamer/loginForbid.jade');
+        return cb();
+    });
+
+    this.action('admin/gamer/talkForbid', function(req, res, cb) {
+        res.render('gamer/talkForbid.jade');
+        return cb();
+    });
+
+    this.action('admin/gamer/setTutorialStatus', function(req, res, cb) {
+    });
+
+    this.action('admin/gamer/search', function(req, res, cb) {
+        var condition = {};
+
+        // condition.id
+        var gamerIdStrArr = req.param('gamerId').split(',');
+        var gamerIdIntArr = [];
+        for (var i = 0, len = gamerIdStrArr.length; i < len; i++) {
+            var intId = parseInt(gamerIdStrArr[i]);
+            if (!isNaN(intId)) {
+                gamerIdIntArr.push(parseInt(intId));
+            }
+        }
+        if (gamerIdIntArr.length !== 0) {
+            condition._id = { $in: gamerIdIntArr }
+        }
+        // condition.name
+        var name = req.param('name');
+        if (name !== '') {
+            condition.name = name;
+        }
+        // condition.serverId
+        var intServerId = parseInt(req.param('serverId'));
+        if (!isNaN(intServerId)) {
+            condition.serverId = intServerId;
+        }
+        // condition.mobageId
+        var intMobageId = parseInt(req.param('mobageId'));
+        if (!isNaN(intMobageId)) {
+            condition.mobageId = intMobageId;
+        }
+        // condition.registeredAt
+        var registerTimeBeginStr = req.param('registerTimeBegin');
+        var registerTimeEndStr   = req.param('registerTimeEnd');
+        if (registerTimeBeginStr !== '') {
+            if (condition.registeredAt === undefined) {
+                condition.registeredAt = {};
+            }
+            var registerTimeBegin = new Date(registerTimeBeginStr);
+            if (registerTimeBegin.toString() !== 'Invalid Date') {
+                condition.registeredAt.$gte = registerTimeBegin.getTime();
+            }
+        }
+        if (registerTimeEndStr !== '') {
+            if (condition.registeredAt === undefined) {
+                condition.registeredAt = {};
+            }
+            var registerTimeEnd = new Date(registerTimeEndStr);
+            if (registerTimeEnd.toString() !== 'Invalid Date') {
+                condition.registeredAt.$lt = registerTimeEnd.getTime();
+            }
+        }
+        // condition.lastLoginAt
+        var lastLoginTimeBeginStr = req.param('lastLoginTimeBegin');
+        var lastLoginTimeEndStr   = req.param('lastLoginTimeEnd');
+        if (lastLoginTimeBeginStr !== '') {
+            if (condition.lastLoginAt === undefined) {
+                condition.lastLoginAt = {};
+            }
+            var lastLoginTimeBegin = new Date(lastLoginTimeBeginStr);
+            if (lastLoginTimeBegin.toString() !== 'Invalid Date') {
+                condition.lastLoginAt.$gte = lastLoginTimeBegin.getTime();
+            }
+        }
+        if (lastLoginTimeEndStr !== '') {
+            if (condition.lastLoginAt === undefined) {
+                condition.lastLoginAt = {};
+            }
+            var lastLoginTimeEnd = new Date(lastLoginTimeEndStr);
+            if (lastLoginTimeEnd.toString() !== 'Invalid Date') {
+                condition.lastLoginAt.$lt = lastLoginTimeEnd.getTime();
+            }
+        }
+        GamerDAO.findWithLimit(condition, 10,  function(err, foundDocs) {
+            if (err) {
+                return self.sendErrorResponse(err, res, cb);
+            }
+            if (foundDocs.length === 0) {
+                res.send('no such gamer');
+                return cb();
+            }
+            var gamersInfoForAdmin = [];
+            foundDocs.forEach(function(doc, index, docs) {
+                var foundGamer = new Gamer(doc);
+                var oneGamerInfo = {};
+                oneGamerInfo.gamerId      = doc._id;
+                oneGamerInfo.name         = doc.name;
+                oneGamerInfo.registeredAt = (new Date(doc.registeredAt)).Format("yyyy-MM-dd hh:mm:ss");
+                oneGamerInfo.lastLoginAt  = (new Date(doc.lastLoginAt)).Format("yyyy-MM-dd hh:mm:ss");
+                oneGamerInfo.xp           = doc.xp;
+                oneGamerInfo.level        = foundGamer.level();
+                oneGamerInfo.coin         = doc.coin;
+                oneGamerInfo.vipLevel     = foundGamer.vipLevel();
+                oneGamerInfo.forbidLogin  = doc.forbidLogin === undefined ? undefined : (new Date(doc.forbidLogin)).Format('yyyy-MM-dd hh:mm:ss');
+                oneGamerInfo.forbidTalk   = doc.forbidTalk === undefined ? undefined : (new Date(doc.forbidTalk)).Format('yyyy-MM-dd hh:mm:ss');
+
+                oneGamerInfo.chargeSum = 0;
+                oneGamerInfo.chargeTimes = 0;
+                oneGamerInfo.purchaseSum = 0;
+                oneGamerInfo.firstChargeTime;
+                oneGamerInfo.maxMission = 0;
+                
+                PurchaseInfoDAO.findOneById(doc._id, function(err, foundPurchaseInfo) {
+                    if (err) {
+                        return self.sendErrorResponse(err, res, cb);
+                    }
+                    if (foundPurchaseInfo !== undefined) {
+                        console.log(foundPurchaseInfo);
+                        foundPurchaseInfo.doc.history.forEach(function(oneRecord, index, history) {
+                            if (oneRecord.currency === 999) {
+                                oneGamerInfo.chargeSum += oneRecord.price;
+                                oneGamerInfo.chargeTimes ++;
+                                if (oneGamerInfo.firstChargeTime !== undefined ||
+                                    oneRecord.purchaseAr < oneGamerInfo.firstChargeTime) {
+                                    oneGamerInfo.firstChargeTime = oneRecord.purchaseAt;
+                                }
+                            } else if (oneRecord.currency === 9) {
+                                oneGamerInfo.purchaseSum += oneRecord.price;
+                            }
+                        });
+                        if (oneGamerInfo.firstChargeTime !== undefined) {
+                            oneGamerInfo.firstChargeTime = (new Date(oneGamerInfo.firstChargeTime)).Format("yyyy-MM-dd hh:mm:ss");
+                        }
+                    }
+                    MissionProgressDAO.findOneByGamerId(doc._id, function(err, foundMissionProgress) {
+                        if (err) {
+                            return self.sendErrorResponse(err, res, cb);
+                        }
+                        if (foundMissionProgress !== undefined && foundMissionProgress !== null) {
+                            var missionStates = foundMissionProgress.missionStates;
+                            oneGamerInfo.maxMission = 0;
+                            for (var season in missionStates) {
+                                for (var stage in missionStates[season]) {
+                                    for (var missionId in missionStates[season][stage]) {
+                                        var oneMission = missionStates[season][stage][missionId];
+                                        var missionIdInt = parseInt(missionId);
+                                        if (missionIdInt > oneGamerInfo.maxMission && oneMission.win === true) {
+                                            oneGamerInfo.maxMission = missionIdInt;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        gamersInfoForAdmin.push(oneGamerInfo);
+                        app.ServerDAO.find({}, function(err, servers) {
+                            if (err) {
+                                return self.sendErrorResponse(err, res, cb);
+                            }
+                            else {
+                                if (index === docs.length - 1) {
+                                    if (foundDocs != null) {
+                                        res.render('gamer/gamerTable.jade',
+                                                   {
+                                                       gamers: gamersInfoForAdmin,
+                                                       servers: servers
+                                                   }
+                                                  );
+                                    }
+                                    else {
+                                        res.send('Gamer does not exist');
+                                    }
+                                    return cb();
+                                }
+                            }
+                        });
+                    });
+                });
+            });
+        });
+    });
+
+    this.action('admin/gamer/searchCard', function(req, res, cb) {
+        GamerDAO.findOneByGamerId(req.param('gamerId'), function(err, foundDoc) {
+            console.log(foundDoc);
+            var cardsInfoForAdmin = [];
+            var foundGamer = new Gamer(foundDoc.doc);
+            for (var heroNum in foundDoc.heroes) {
+                if (foundDoc.heroes[heroNum].definitionId == req.param('cardId')) {
+                    var foundHero = new Hero(foundDoc.heroes[heroNum], foundGamer);
+                    var oneCardInfo = {};
+                    oneCardInfo.gamerId = foundDoc._id;
+                    oneCardInfo.cardId  = foundDoc.heroes[heroNum].definitionId;
+                    oneCardInfo.xp      = foundDoc.heroes[heroNum].xp;
+                    oneCardInfo.level   = foundHero.level();
+                    oneCardInfo.status  = foundHero.statusFinal();
+                    oneCardInfo.skills   = [];
+                    foundHero.doc.skills.forEach(function(skillId, index, skills) {
+                        if (skillId !== null) {
+                            oneCardInfo.skills.push({
+                                "definitionId": foundGamer.skills[skillId].definitionId,
+                                "xp": foundGamer.skills[skillId].xp
+                            });
+                        }
+                        else {
+                            oneCardInfo.skills.push({});
+                        }
+                    });
+
+                    cardsInfoForAdmin.push(oneCardInfo);
+                }
+            }
+            res.render('gamer/cardSearch.jade', { cards: cardsInfoForAdmin });
+            return cb();
+        });
+    });
+
+    this.action('admin/gamer/searchRewardLog', function(req, res, cb) {
+        fs.readdir('public/outputs/', function(err, files) {
+            if (err) {
+                res.send('没有生成过 reward log');
+                return cb();
+            }
+            var fileNameBegin = req.param('rewardYear');
+            var fileNameHeadLength = 4;
+            if (req.param('rewardMonth').length > 0) {
+                fileNameBegin += '_';
+                if (req.param('rewardMonth').length === 1) fileNameBegin += '0';
+                fileNameBegin += req.param('rewardMonth');
+                fileNameHeadLength += 3;
+                if (req.param('rewardDay').length > 0) {
+                    fileNameBegin += '_';
+                    if (req.param('rewardDay').length === 1) fileNameBegin += '0';
+                    fileNameBegin += req.param('rewardDay');
+                    fileNameHeadLength += 3;
+                }
+            }
+
+            var resultFiles = [];
+            files.forEach(function(element, index, elements) {
+                if (element.slice(0, fileNameHeadLength) === fileNameBegin) {
+                    resultFiles.push(element);
+                }
+            });
+            res.render('gamer/rewardLog.jade', { logFileNames: resultFiles });
+            return cb();
+        });
+    });
+    
+    this.action('admin/gamer/doReward', function(req, res, cb) {
+        if (rewardLock === true) {
+            return res.send('reward is still processing');
+        }
+        rewardLock = true;
+
+        var serverId = parseInt(req.param('server_id'));
+        if (isNaN(serverId)) {
+            res.send('serverId invalid, id: ' + serverId);
+            rewardLock = false;
+            return cb();
+        }
+
+        var field;
+        var whichArr = [];
+        switch (req.param('inputGamerType')) {
+            case 'namesText':
+                if (req.param('namesText') !== '') {
+                    whichArr = req.param('namesText').split(',');
+                }
+                else {
+                    whichArr = [];
+                }
+                field = 'name';
+                break;
+            case 'namesFile':
+                var nameFileStr = fs.readFileSync(req.files.namesFile.path, 'utf8');
+                whichArr = nameFileStr.split(/[,\r]/);
+                whichArr = whichArr.map(function(name) { return name.replace(/\n/g, ''); });  // 去掉可能的\n
+                whichArr = whichArr.filter(function(name){ return name!=''; });   // 去掉空的字符(可能是被上面去掉\n后的字符)
+                field = 'name';
+                break;
+            case 'gamerIdsText':
+                if (req.param('gamerIdsText') !== '') {
+                    whichArr = req.param('gamerIdsText').split(',');
+                    whichArr = whichArr.map(function(gamerId) { return parseInt(gamerId) });
+                }
+                else {
+                    whichArr = [];
+                }
+                field = '_id';
+                break;
+            case 'gamerIdsFile':
+                var gamerIdFileStr = fs.readFileSync(req.files.gamerIdsFile.path, 'utf8');
+                whichArr = gamerIdFileStr.split(/[,\r]/);
+                whichArr = whichArr.map(function(name) { return name.replace(/\n/g, ''); });  // 去掉可能的\n
+                whichArr = whichArr.filter(function(name){ return name!=''; });   // 去掉空的字符(可能是被上面去掉\n后的字符)
+                whichArr = whichArr.map(function(gamerId) { return parseInt(gamerId) });
+                field = '_id';
+                break;
+            case 'mobageIdsText':
+                if (req.param('mobageIdsText') !== '') {
+                    whichArr = req.param('mobageIdsText').split(',');
+                    whichArr = whichArr.map(function(mobageId) { return parseInt(mobageId) });
+                }
+                else {
+                    whichArr = [];
+                }
+                field = 'mobageId';
+                break;
+            case 'mobageIdsFile':
+                var mobageIdFileStr = fs.readFileSync(req.files.mobageIdsFile.path, 'utf8');
+                whichArr = mobageIdFileStr.split(/[,\r]/);
+                whichArr = whichArr.map(function(name) { return name.replace(/\n/g, ''); });  // 去掉可能的\n
+                whichArr = whichArr.filter(function(name){ return name!=''; });   // 去掉空的字符(可能是被上面去掉\n后的字符)
+                whichArr = whichArr.map(function(mobageId) { return parseInt(mobageId) });
+                field = 'mobageId';
+                break;
+            default:
+                logger.warn('doReward > inputGamerType type invalid: '+req.param('inputGamerType'));
+                rewardLock = false;
+                res.send('please choose inputGamerType');
+                return cb();
+        }
+
+        if (whichArr.length === 0) {
+            rewardLock = false;
+            res.send('please input '+req.param('inputGamerType'));
+            return cb();
+        }
+
+        GamerDAO.findByServerIdAndArr(serverId, field, whichArr, function(err, foundDocs) {
+            if (err) {
+                rewardLock = false;
+                return self.sendErrorResponse(err, res, cb);
+            }
+            foundDocs = foundDocs || [];
+
+            var foundFieldArr = foundDocs.map(function(doc) { return doc[field]; });
+            var naFieldArr = [];
+            if (foundFieldArr.length != whichArr.length) {
+                naFieldArr = _und.difference(whichArr, foundFieldArr);
+            }
+
+            var paramObj = {};
+            var giftParamList = ['gift_type','skill_id','equipment_id','chip_id','heroSpark_id',
+                                 'skillSpark_id','items_id','pack_id','amount'];
+
+            giftParamList.forEach(function(key) {
+                var value = req.param(key);
+                paramObj[key] = value;
+                if(!Array.isArray(paramObj[key])) paramObj[key] = [paramObj[key]];
+            });
+
+            //['hero','pack','ticket','coin','skill','equipment','chip','heroSpark','skillSpark','items']
+            var rewards = [];
+            for (var i = 0; i < paramObj.gift_type.length; ++i) {
+                var typ = paramObj.gift_type[i];
+                var doc = {amount: parseInt(paramObj.amount[i])};
+                switch(typ) {
+                case 'hero':
+                    logger.error('现在不支持admin发放英雄');
+                    continue;
+                    break;
+                case 'pack':
+                    doc.id = paramObj.pack_id[i];
+                    doc.type = Constants.REWARD.TYPE.PACK;
+                    break;
+                case 'ticket':
+                    doc.id = Constants.ITEM.ID.TICKET_ITEM_ID;
+                    doc.type = Constants.REWARD.TYPE.ITEM;
+                    break;
+                case 'coin':
+                    doc.id = Constants.ITEM.ID.COIN_ITEM_ID;
+                    doc.type = Constants.REWARD.TYPE.ITEM;
+                    break;
+                case 'skill':
+                    doc.id = paramObj.skill_id[i];
+                    doc.type = Constants.REWARD.TYPE.ITEM;
+                    break;
+                case 'equipment':
+                    doc.type = Constants.REWARD.TYPE.ITEM;
+                    doc.id = paramObj.equipment_id[i];
+                    break;
+                case 'chip':
+                    doc.type = Constants.REWARD.TYPE.ITEM;
+                    doc.id = paramObj.chip_id[i];
+                    break;
+                case 'heroSpark':
+                    doc.type = Constants.REWARD.TYPE.ITEM;
+                    doc.id = paramObj.heroSpark_id[i];
+                    break;
+                case 'skillSpark':
+                    doc.type = Constants.REWARD.TYPE.ITEM;
+                    doc.id = paramObj.skillSpark_id[i];
+                    break;
+                case 'items':
+                    doc.type = Constants.REWARD.TYPE.ITEM;
+                    doc.id = paramObj.items_id[i];
+                    break;
+                default:
+                    logger.error('type not found: '+typ);
+                    continue;
+                }
+                var reward = new Reward(doc);
+                rewards.push(reward);
+            }
+
+            var fns = [];
+
+            var failedGamers = [];
+            var successGamers= [];
+            foundDocs.forEach(function(gamerDoc) {
+                fns.push(function(callback) {
+                    var gamer = new Gamer(gamerDoc);
+                    var updates = {};
+                    rewards.forEach(function(rwd) {
+                        rwd.applyToGamer(updates, gamer);
+                    });
+                    GamerDAO.updateById(gamer.id, updates, function(err, updatedDoc) {
+                        if (err) {
+                            failedGamers.push({id:gamer.id, name:gamer.name, mobageId:gamer.mobageId});
+                        } else {
+                            successGamers.push({id:gamer.id, name:gamer.name, mobageId:gamer.mobageId});
+                        }
+                        callback();
+                    });
+                });
+            });
+
+            async.parallel(fns, function() {
+                var rewardLog = 'you gave below gifts to below users\n\n';
+                rewardLog += '============WITH ' + rewards.length + ' GIFTS================\n';
+                rewardLog += JSON.stringify(rewards, null, '  ') + '\n';
+
+                rewardLog += '============TO ' + successGamers.length + ' USERS=============\n';
+                rewardLog += JSON.stringify(successGamers, null, '  ') + '\n';
+
+                rewardLog += '========HAVING ' + failedGamers.length + ' USERS update Error=======\n';
+                rewardLog += JSON.stringify(failedGamers, null, '  ') + '\n';
+
+
+                var title = 'multiUserGifting';
+                AdminLogic.outputLog(title, rewardLog, function(err) {
+                    if (err) {
+                        res.send('write reward log error');
+                    }
+                    else {
+                        res.send('奖励已经发给 '+successGamers.length+' 个玩家; \n' +
+                            '这些人没找到:'+JSON.stringify(naFieldArr)+'\n' +
+                            '这些人没搜索出来:'+JSON.stringify(failedGamers));
+                    }
+                    rewardLock = false;
+                    return cb();
+                });
+            });
+        });
+    });
+    
+    this.action('admin/gamer/searchPersonalMessage', function(req, res, cb) {
+        var condition = {};
+
+        var intGamerId = parseInt(req.param('gamerId'));
+        if (isNaN(intGamerId)) {
+            res.send('Invalid gamerId');
+            return cb();
+        }
+        condition._id = intGamerId;
+
+        var startTime = parseOptionDate(req.param('startTime'), 'start');
+        if (startTime === 'Invalid Date') {
+            res.send('Invalid start time');
+            return cb();
+        }
+        var endTime = parseOptionDate(req.param('endTime'), 'end');
+        if (endTime === 'Invalid Date') {
+            res.send('Invalid end time');
+            return cb();
+        }
+
+        var messageType = req.param('messageType');
+
+        PersonalMessageDAO.findOne(condition, function(err, personalMessage) {
+            if (err) {
+                return self.sendErrorResponse(err, res, cb);
+            }
+            var responseMessages = [];
+            for (var messageNum in personalMessage.messages) {
+                var currentMessage = personalMessage.messages[messageNum];
+                if (currentMessage.type === Constants.MESSAGE.TYPE[messageType]) {
+                    if (currentMessage.createdAt > startTime && currentMessage.createdAt < endTime) {
+                        currentMessage.createdAt = (new Date(currentMessage.createdAt)).Format('yyyy-MM-dd hh:mm:ss');
+                        responseMessages.push(currentMessage);
+                    }
+                }
+            }
+            res.render('gamer/personalMessageSearch.jade', { messages: responseMessages });
+            return cb();
+        });
+
+/*      // 用这个方法不能就不能输入时间等其他参数了
+        GamerDAO.findOneByGamerId(intGamerId, function(err, gamerObj) {
+            if (err) {
+                return self.sendErrorResponse(err, res, cb);
+            }
+            if (!gamerObj) {
+                var responseError = new TFError(ErrorCodes.NO_SUCH_GAMER, 'SessionFilter: no such gamer exist gamerId=' + gamerId);
+                return self.sendErrorResponse(responseError, res, cb);
+            }
+            PersonalMessageDAO.findOneOrCreate(intGamerId, function(err, personalMessage) {
+                if (err) {
+                    return self.sendErrorResponse(err, res, cb);
+                }
+                logger.debug('retrievePersonalMessages, personalMessage' + personalMessage);
+                MessageLogic.retrievePersonalMessages(personalMessage, function(err, messages) {
+                    if (err) {
+                        return self.sendErrorResponse(err, res, cb);
+                    }
+                    res.send(messages);
+                    return cb();
+                });
+            });
+        });
+*/
+    });
+
+    this.action('admin/gamer/searchHornMessage', function(req, res, cb) {
+        var condition = {};
+
+        var intGamerId = parseInt(req.param('gamerId'));
+        if (isNaN(intGamerId)) {
+            res.send('Invalid gamerId');
+            return cb();
+        }
+        condition.ownerId = intGamerId;
+
+        var startTime = parseOptionDate(req.param('startTime'), 'start');
+        if (startTime === 'Invalid Date') {
+            res.send('Invalid start time');
+            return cb();
+        }
+        var endTime = parseOptionDate(req.param('endTime'), 'end');
+        if (endTime === 'Invalid Date') {
+            res.send('Invalid end time');
+            return cb();
+        }
+
+        HornMessageDAO.find(condition, function(err, hornMessages) {
+            if (err) {
+                return self.sendErrorResponse(err, res, cb);
+            }
+            var responseMessages = [];
+            hornMessages.forEach(function(singleMessage) {
+                if (singleMessage.createdAt > startTime && singleMessage.createdAt < endTime) {
+                    singleMessage.createdAt = (new Date(singleMessage.createdAt)).Format('yyyy-MM-dd hh:mm:ss');
+                    responseMessages.push(singleMessage);
+                }
+            });
+            res.render('gamer/hornMessageSearch.jade', { messages: responseMessages });
+            return cb();
+        });
+    });
+
+    this.action('admin/gamer/deleteHornMessage', function(req, res, cb) {
+        var condition = {};
+
+        var messageIdStr = req.param('messageId');
+        condition._id = new ngserver.Mongodb.ObjectID(messageIdStr);
+
+        HornMessageDAO.remove(condition, function(err) {
+            if (err) {
+                return self.sendErrorResponse(err, res, cb);
+            }
+            res.redirect('/admin/gamer/hornMessage');
+            return cb();
+        });
+    });
+
+    this.action('admin/gamer/forbidLogin', function(req, res, cb) {
+        var gamerId = req.param('gamerId');
+        var endTime = req.param('endTime');
+        var endDate = new Date(endTime);
+        if (isNaN(endDate.getTime())) {
+            res.json(200, {result: -1, error: 'Error time format'});
+            return cb();
+        }
+
+        GamerDAO.findOneByGamerId(req.param('gamerId'), function(err, foundDoc) {
+            if (err) {
+                res.json(200, {result: -2, error: 'Find gamer from db error'});
+                return cb();
+            }
+
+            if (!foundDoc) {
+                res.json(200, {result: -3, error: 'Gamer not found'});
+                return cb();
+            }
+
+            var updates = {};
+            MongoUtil.$set(updates, 'forbidLogin', endTime);
+
+            GamerDAO.updateById(gamerId, updates, function(err, updatedDoc) {
+                if (err) {
+                    res.json(200, {result: -4, error: 'Update gamer to db error: ' + JSON.stringify(err)});
+                    return cb();
+                }
+
+                res.json(200, {result: 0});
+                return cb();
+            });
+        });
+    });
+
+    this.action('admin/gamer/forbidTalk', function(req, res, cb) {
+        var gamerId = req.param('gamerId');
+        var endTime = req.param('endTime');
+        var endDate = new Date(endTime);
+        if (isNaN(endDate.getTime())) {
+            res.json(200, {result: -1, error: 'Error time format'});
+            return cb();
+        }
+
+        GamerDAO.findOneByGamerId(req.param('gamerId'), function(err, foundDoc) {
+            if (err) {
+                res.json(200, {result: -2, error: 'Find gamer from db error'});
+                return cb();
+            }
+
+            if (!foundDoc) {
+                res.json(200, {result: -3, error: 'Gamer not found'});
+                return cb();
+            }
+
+            var updates = {};
+            MongoUtil.$set(updates, 'forbidTalk', endTime);
+
+            GamerDAO.updateById(gamerId, updates, function(err, updatedDoc) {
+                if (err) {
+                    res.json(200, {result: -3, error: 'Update gamer to db error: ' + JSON.stringify(err)});
+                    return cb();
+                }
+
+                res.json(200, {result: 0});
+                return cb();
+            });
+        });
+    });
+}
+
+util.inherits(AdminGamerController, AdminBaseController);
+
+var ctr = new AdminGamerController();
+
+exports.routes = {
+    GET: {
+        '/admin/gamer/index':           ctr.action('admin/gamer/index'),
+        '/admin/gamer/show/:id':        ctr.action('admin/gamer/show'),
+        '/admin/gamer/reward':          ctr.action('admin/gamer/reward'),
+        '/admin/gamer/rewardLog':       ctr.action('admin/gamer/rewardLog'),
+        '/admin/gamer/cardSearch':      ctr.action('admin/gamer/cardSearch'),
+        '/admin/gamer/equipmentSearch': ctr.action('admin/gamer/equipmentSearch'),
+        '/admin/gamer/skillSearch':     ctr.action('admin/gamer/skillSearch'),
+        '/admin/gamer/personalMessage': ctr.action('admin/gamer/personalMessage'),
+        '/admin/gamer/hornMessage'    : ctr.action('admin/gamer/hornMessage'),
+        '/admin/gamer/loginForbid':     ctr.action('admin/gamer/loginForbid'),
+        '/admin/gamer/talkForbid':     ctr.action('admin/gamer/talkForbid')
+    },
+    POST: {
+        '/admin/gamer/search':          ctr.action('admin/gamer/search'),
+        '/admin/gamer/reward':          ctr.action('admin/gamer/doReward'),
+        '/admin/gamer/searchRewardLog': ctr.action('admin/gamer/searchRewardLog'),
+        '/admin/gamer/searchCard':      ctr.action('admin/gamer/searchCard'),
+        '/admin/gamer/searchItem':      ctr.action('admin/gamer/searchItem'),
+        '/admin/gamer/searchEquipment': ctr.action('admin/gamer/searchEquipment'),
+        '/admin/gamer/searchSkill':     ctr.action('admin/gamer/searchSkill'),
+        '/admin/gamer/searchPersonalMessage': ctr.action('admin/gamer/searchPersonalMessage'),
+        '/admin/gamer/searchHornMessage': ctr.action('admin/gamer/searchHornMessage'),
+        '/admin/gamer/deleteHornMessage': ctr.action('admin/gamer/deleteHornMessage'),
+        '/admin/gamer/forbidLogin':     ctr.action('admin/gamer/forbidLogin'),
+        '/admin/gamer/forbidTalk':     ctr.action('admin/gamer/forbidTalk')
+    }
+};
+
+function parseOptionDate(date, beginOrEnd) {
+    var parsedDate;
+    if (date === '') {
+        if (beginOrEnd === 'start') {
+            parsedDate = -Infinity;
+        }
+        else if (beginOrEnd === 'end') {
+            parsedDate = Infinity;
+        }
+        else {
+            // handle unexpect value
+        }
+    }
+    else {
+        parsedDate = new Date(date);
+        if (parsedDate.toString() !== 'Invalid Date') {
+            parsedDate = parsedDate.getTime();
+        }
+    }
+    return parsedDate;
+}
