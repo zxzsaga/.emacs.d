@@ -11,7 +11,9 @@
 (defvar packages
   '(dash
     diminish
-    undo-tree)
+    undo-tree
+    company
+    )
   "A list of packages to ensure are installed at launch.")
 
 (defun check-packages-installed-p ()
@@ -102,8 +104,11 @@ PACKAGE is installed only if not already present.  The file is opened in MODE."
 (when (package-installed-p 'pkgbuild-mode)
   (add-to-list 'auto-mode-alist '("PKGBUILD\\'" . pkgbuild-mode)))
 
+
 (add-to-list 'auto-mode-alist '("\\.styl$" . sws-mode))
 (add-to-list 'auto-mode-alist '("\\.jade$" . jade-mode))
+(add-hook 'after-init-hook 'global-company-mode)
+
 
 ;; build auto-install mappings
 (mapc

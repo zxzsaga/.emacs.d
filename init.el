@@ -63,4 +63,11 @@
 (when (file-exists-p load-modules-file)
   (load load-modules-file))
 
+;; set default directory
+(cd "~/src/transformers_server")
+;; (setq default-directory "~/src/transformers_server")
+
+;; 代码折叠
+(global-set-key [f5] 'hs-toggle-hiding)
+
 ;;; init.el ends here
