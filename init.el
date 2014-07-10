@@ -70,4 +70,13 @@
 ;; 代码折叠
 (global-set-key [f5] 'hs-toggle-hiding)
 
+;; 窗口布局
+(progn (split-window-horizontally)
+       (other-window 1)
+       (shell)
+       (split-window-vertically)
+       (other-window 1)
+       (ielm)
+       (other-window 1))
+
 ;;; init.el ends here
