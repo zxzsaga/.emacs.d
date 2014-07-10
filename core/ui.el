@@ -37,8 +37,8 @@
 		   (abbreviate-file-name (buffer-file-name))
 		 "%b"))))
 
-;; use blackboard as the default theme
-(load-theme 'blackboard t)
+;; use monokai as the default theme
+(load-theme 'monokai t)
 
 ;; 在mac下显示中文字体
 (set-fontset-font
