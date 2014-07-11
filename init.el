@@ -70,13 +70,17 @@
 ;; 代码折叠
 (global-set-key [f5] 'hs-toggle-hiding)
 
+(setq sr-speedbar-right-side nil)
+(setq sr-speedbar-width 12)
+(sr-speedbar-open)
+
 ;; 窗口布局
-(progn (split-window-horizontally)
-       (other-window 1)
-       (shell)
-       (split-window-vertically)
-       (other-window 1)
-       (ielm)
-       (other-window 1))
+;; (progn (split-window-horizontally)
+;;       (other-window 1)
+;;       (shell)
+;;       (split-window-vertically)
+;;       (other-window 1)
+;;       (ielm)
+;;       (other-window 1))
 
 ;;; init.el ends here

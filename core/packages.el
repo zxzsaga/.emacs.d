@@ -13,6 +13,7 @@
     diminish
     undo-tree
     company
+    sr-speedbar
     )
   "A list of packages to ensure are installed at launch.")
 
