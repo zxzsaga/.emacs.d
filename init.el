@@ -70,6 +70,8 @@
 ;; 代码折叠
 (global-set-key [f5] 'hs-toggle-hiding)
 
+;; use ascii install of icon
+;; (setq speedbar-use-images nil)
 (setq sr-speedbar-right-side nil)
 (setq sr-speedbar-width 12)
 (sr-speedbar-open)
