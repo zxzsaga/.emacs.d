@@ -61,7 +61,7 @@
 (when (file-exists-p load-modules-file) (load load-modules-file))
 
 ;; set default directory
-(cd "~/src/transformers_server")
+;; (cd "~/src/transformers_server")
 ;; (setq default-directory "~/src/transformers_server")
 
 ;; 代码折叠
@@ -81,5 +81,7 @@
 ;;       (other-window 1)
 ;;       (ielm)
 ;;       (other-window 1))
+
+(setq helm-alive-p 1)
 
 ;;; init.el ends here
