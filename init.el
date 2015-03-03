@@ -86,6 +86,8 @@
 
 ;; w3m exec-path
 (add-to-list 'exec-path "/usr/local/Cellar/w3m/0.5.3/bin")
+;; set w3m homepage
+(setq w3m-home-page "http://docs.unity3d.com/Manual/index.html")
 
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
