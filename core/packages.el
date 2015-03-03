@@ -13,6 +13,8 @@
     undo-tree
     company
     sr-speedbar
+    mew
+    w3m
     )
   "A list of packages to ensure are installed at launch.")
 

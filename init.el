@@ -84,6 +84,9 @@
 
 (setq helm-alive-p 1)
 
+;; w3m exec-path
+(add-to-list 'exec-path "/usr/local/Cellar/w3m/0.5.3/bin")
+
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
