@@ -1,0 +1,7 @@
+ls
+cd ~
+ls
+cd transformer/
+ls
+cd  server/
+git pull

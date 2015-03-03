@@ -35,7 +35,7 @@
 		 "%b"))))
 
 ;; use monokai as the default theme
-(load-theme 'monokai t)
+(load-theme 'garden t)
 
 ;; 在mac下显示中文字体
 (set-fontset-font

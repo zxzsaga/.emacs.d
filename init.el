@@ -61,8 +61,8 @@
 (when (file-exists-p load-modules-file) (load load-modules-file))
 
 ;; set default directory
-;; (cd "~/src/transformers_server")
-;; (setq default-directory "~/src/transformers_server")
+(cd "~/transformer/server")
+;; (setq default-directory "~/transformers_server")
 
 ;; 代码折叠
 (global-set-key [f5] 'hs-toggle-hiding)
@@ -84,4 +84,18 @@
 
 (setq helm-alive-p 1)
 
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(custom-safe-themes (quote ("dd48b24b2d19e9223be777964068b0d84afcdc21ccd77ea4af411e675c00e2e4" "324c2cfc812a894c0a7c34b7fd25a8b60c0cf40349a65c42114f8883fc724a70" "98c3e4263e11d2474a337dd04d1310911befcd0d0d66d9924408c6f20a3d21ad" "9ea60610b285322536c1245f79c17ae5158aeddf9806b60622803e877ad61059" "190edbd19a171d42c0f73ed3b542280f2e29d87930b6b569267462bb85ae552d" "f641bdb1b534a06baa5e05ffdb5039fb265fde2764fbfd9a90b0d23b75f3936b" default)))
+ '(org-export-backends (quote (ascii html icalendar latex md))))
+
 ;;; init.el ends here
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
