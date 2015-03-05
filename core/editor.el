@@ -24,5 +24,8 @@
 ;; delete the selection with a keypress
 (delete-selection-mode t)
 
+;; 显示行尾多余空格
+(setq-default show-trailing-whitespace t)
+
 (provide 'editor)
 
