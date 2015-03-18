@@ -15,7 +15,7 @@
 ;; personal indentation width, while maintaining the style (and
 ;; meaning) of any files you load.
 (setq-default indent-tabs-mode nil)   ;; don't use tabs to indent
-(setq-default tab-width 8)            ;; but maintain correct appearance
+(setq-default tab-width 4)            ;; but maintain correct appearance
 
 ;; sensible undo
 (global-undo-tree-mode)

@@ -1,8 +1,5 @@
-(require 'cl)
-(require 'package)
-
-(require 'sws-mode)
-(require 'jade-mode)
+(require 'cl)  ;; common lisp
+(require 'package)  ;; package manage tool
 
 (add-to-list 'package-archives '("melpa" . "http://melpa.milkbox.net/packages/") t)
 (package-initialize)
@@ -106,11 +103,11 @@ PACKAGE is installed only if not already present.  The file is opened in MODE."
 (when (package-installed-p 'pkgbuild-mode)
   (add-to-list 'auto-mode-alist '("PKGBUILD\\'" . pkgbuild-mode)))
 
-
+(require 'sws-mode)
+(require 'jade-mode)
 (add-to-list 'auto-mode-alist '("\\.styl$" . sws-mode))
 (add-to-list 'auto-mode-alist '("\\.jade$" . jade-mode))
 (add-hook 'after-init-hook 'global-company-mode)
-
 
 ;; build auto-install mappings
 (mapc
