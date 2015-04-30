@@ -12,6 +12,7 @@
     sr-speedbar
     mew
     w3m
+    yasnippet
     )
   "A list of packages to ensure are installed at launch.")
 
@@ -92,7 +93,8 @@ PACKAGE is installed only if not already present.  The file is opened in MODE."
     ("\\.scss\\'" scss-mode scss-mode)
     ("\\.slim\\'" slim-mode slim-mode)
     ("\\.textile\\'" textile-mode textile-mode)
-    ("\\.yml\\'" yaml-mode yaml-mode)))
+    ("\\.yml\\'" yaml-mode yaml-mode)
+    ("\\.cs\\'" csharp-mode csharp-mode)))
 
 ;; markdown-mode doesn't have autoloads for the auto-mode-alist
 ;; so we add them manually if it's already installed
@@ -108,6 +110,8 @@ PACKAGE is installed only if not already present.  The file is opened in MODE."
 (add-to-list 'auto-mode-alist '("\\.styl$" . sws-mode))
 (add-to-list 'auto-mode-alist '("\\.jade$" . jade-mode))
 (add-hook 'after-init-hook 'global-company-mode)
+
+(yas-global-mode 1)
 
 ;; build auto-install mappings
 (mapc
