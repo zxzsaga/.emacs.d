@@ -51,3 +51,22 @@ add-subfolders-to-load-path(vendor-dir)
 (when (file-exists-p load-modules-file)
   (load load-modules-file))
 #+END_SRC
+
+** 模块简介
+*** dash
+    A modern list library for Emacs. 其中定义的方法绝大部分都以 =-= 开头。
+*** diminish
+    Diminished modes are minor modes with no modeline display. 大概是简化编辑器下方显示的 minor modes.
+*** undotree
+    =C-x u=
+*** company
+    自动补全
+*** sr-speedbar
+    测边的文件管理器
+*** mew
+    Messaging in the Emacs World. 不懂。
+*** w3m
+    浏览器
+*** yasnippet
+    自定义快捷操作
+

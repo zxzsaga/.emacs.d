@@ -1,43 +1,33 @@
-;; define var current-user and check emacs-version >= 24.1
-(defvar current-user
-  (getenv (if (equal system-type 'windows-nt) "USERNAME" "USER")))
 (when (version< emacs-version "24.1")
   (error "Requires at least GNU Emacs 24.1"))
 
+(defvar current-user (getenv(if (equal system-type 'windows-nt) "USERNAME" "USER"))
+  "Current user name.")
+
 ;; define directories
-(defvar root-dir
-  (file-name-directory load-file-name)
+(defvar root-dir (file-name-directory load-file-name)
   "The root dir of the Emacs configuration.")
-(defvar core-dir
-  (expand-file-name "core" root-dir)
+(defvar core-dir (expand-file-name "core" root-dir)
   "The home of core functionality.")
-(defvar modules-dir
-  (expand-file-name "modules" root-dir)
+(defvar modules-dir (expand-file-name "modules" root-dir)
   "This directory houses all of the built-in modules.")
-(defvar vendor-dir
-  (expand-file-name "vendor" root-dir)
+(defvar vendor-dir (expand-file-name "vendor" root-dir)
   "This directory houses packages that are not yet availabel in ELPA (or MELPA).")
-(defvar themes-dir
-  (expand-file-name "themes" root-dir)
+(defvar themes-dir (expand-file-name "themes" root-dir)
   "This directory houses themes.")
-(defvar savefile-dir
-  (expand-file-name "savefile" root-dir)
+(defvar savefile-dir (expand-file-name "savefile" root-dir)
   "This folder stores all the automatically generated save/history-files.")
-(defvar backup-dir
-  (expand-file-name "backups" root-dir)
+(defvar backup-dir (expand-file-name "backups" root-dir)
   "This folder stores all the automatically generated save/history-files.")
 
-;; set custom-theme-directory to themes-dir
 (setq custom-theme-directory themes-dir)
 
-;; define load-modules-file
-(defvar load-modules-file
-  (expand-file-name "load-modules.el" root-dir)
+(defvar load-modules-file (expand-file-name "load-modules.el" root-dir)
   "This files contains a list of modules that will be loaded.")
 
 ;; mkdir of savefile-dir and backup-dir if they doesn't exist
 (unless (file-exists-p savefile-dir)
-  (make-directory savefile-dir))
+  (make-directory savefile-dir)) 
 (unless (file-exists-p backup-dir)
   (make-directory backup-dir))
 
@@ -79,8 +69,8 @@
   (load load-modules-file))
 
 ;; set default directory
-(cd "~/transformer/server")
-;; (setq default-directory "~/transformers_server")
+(cd "~/tfr")
+;; (setq default-directory "~/tfr")
 
 ;; 代码折叠
 (global-set-key [f5] 'hs-toggle-hiding)
