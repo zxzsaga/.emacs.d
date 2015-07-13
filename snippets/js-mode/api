@@ -1,0 +1,15 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: api
+# key: api
+# binding: direct-keybinding
+# --
+/**
+ * @api {post} $1 $2
+ * @apiName $3
+ * @apiGroup $4
+ *
+ * @apiParam {Number} gamerId 玩家ID
+ * @apiParam {$5}
+ *
+ * @apiSuccess {Object} data
+ */

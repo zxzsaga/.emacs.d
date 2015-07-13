@@ -27,7 +27,7 @@
 
 ;; mkdir of savefile-dir and backup-dir if they doesn't exist
 (unless (file-exists-p savefile-dir)
-  (make-directory savefile-dir)) 
+  (make-directory savefile-dir))
 (unless (file-exists-p backup-dir)
   (make-directory backup-dir))
 
@@ -69,8 +69,8 @@
   (load load-modules-file))
 
 ;; set default directory
-(cd "~/tfr")
-;; (setq default-directory "~/tfr")
+(cd "~")
+;; (setq default-directory "~")
 
 ;; 代码折叠
 (global-set-key [f5] 'hs-toggle-hiding)
