@@ -1,0 +1,9 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: label
+# key: label
+# binding: direct-keybinding
+# --
+{
+    labelName: $1,
+    labelValue: $2
+}

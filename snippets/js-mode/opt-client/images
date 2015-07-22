@@ -1,0 +1,10 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: images
+# key: images
+# binding: direct-keybinding
+# --
+// images
+var images = [
+    $1
+];
+UIUtils.setupImages(this._mainWidget, images);

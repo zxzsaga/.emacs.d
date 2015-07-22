@@ -1,0 +1,10 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: buttons
+# key: buttons
+# binding: direct-keybinding
+# --
+// buttons
+var buttons = [
+    $1
+];
+UIUtils.setupButtons(this, this._mainWidget, buttons);

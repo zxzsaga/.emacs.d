@@ -1,0 +1,10 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: image
+# key: image
+# binding: direct-keybinding
+# --
+{
+    imageName: $1,
+    imagePath: $2,
+    imageType: GlobalConstants.UI_TEX_TYPE_LOCAL
+}
