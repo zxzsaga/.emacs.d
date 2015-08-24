@@ -13,6 +13,8 @@
     mew
     w3m
     yasnippet
+    flymake-easy
+    flymake-jslint
     )
   "A list of packages to ensure are installed at launch.")
 

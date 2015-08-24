@@ -1,0 +1,15 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: mediator
+# key: mediator
+# binding: direct-keybinding
+# --
+function $1Mediator() {
+    this.view = null;
+}
+_util.inherits($1Mediator, BaseMediator);
+
+$1Mediator.prototype.prepareData = function() {
+    // TODO, 假数据
+	var retData = {};
+    return retData;
+};

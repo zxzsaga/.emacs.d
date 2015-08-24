@@ -1,12 +1,14 @@
 (when (version< emacs-version "24.1")
   (error "Requires at least GNU Emacs 24.1"))
 
-(defvar current-user (getenv(if (equal system-type 'windows-nt) "USERNAME" "USER"))
-  "Current user name.")
+(defvar current-user
+        (getenv (if (equal system-type 'windows-nt) "USERNAME" "USER"))
+        "Current user name.")
 
 ;; define directories
-(defvar root-dir (file-name-directory load-file-name)
-  "The root dir of the Emacs configuration.")
+(defvar root-dir
+        (file-name-directory load-file-name)
+        "The root dir of the Emacs configuration.")
 (defvar core-dir (expand-file-name "core" root-dir)
   "The home of core functionality.")
 (defvar modules-dir (expand-file-name "modules" root-dir)
@@ -69,8 +71,8 @@
   (load load-modules-file))
 
 ;; set default directory
-(cd "~")
-;; (setq default-directory "~")
+;; (cd "~")
+(setq default-directory "~/opt/client/opt/Resources/src")
 
 ;; 代码折叠
 (global-set-key [f5] 'hs-toggle-hiding)
@@ -96,5 +98,9 @@
 (add-to-list 'exec-path "/usr/local/Cellar/w3m/0.5.3/bin")
 ;; set w3m homepage
 (setq w3m-home-page "http://docs.unity3d.com/Manual/index.html")
+
+(require 'flymake-jslint) ;; Not necessary if using ELPA package
+(setq exec-path (append exec-path '("/Users/xuanzhi.zhang/.nvm/v0.10.22/bin")))
+(add-hook 'js-mode-hook 'flymake-jslint-load)
 
 ;;; init.el ends here

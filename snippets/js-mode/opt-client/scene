@@ -1,0 +1,99 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: scene
+# key: scene
+# binding: direct-keybinding
+# expand-env: ((yas/indent-line 'fixed))
+# --
+var $1Scene = cc.Layer.extend({
+    ctor: function(params) {
+        this._super();
+        cc.associateWithNative(this, cc.Layer);
+        if (!params) {
+        	return;
+        }
+    },
+
+    init: function() {
+        this._super();
+        var mediator = AppFacade.getMediator($1Mediator.name);
+        if (!mediator) {
+            cc.log('$1Scene > init, mediator no found');
+            return false;
+        }
+        mediator.linkView(this);
+
+        this.initData();
+        this.initUI();
+
+        return true;
+    },
+
+    initData : function()
+    {
+        var mediator = AppFacade.getMediator($1Mediator.name);
+        this._data = mediator.prepareData();
+    },
+
+    initUI: function() {
+    	this._uiLayer = ccs.UILayer.create();
+    	this._mainWidget = ccs.GUIReader.getInstance().widgetFromBinaryFile($2);
+        this._uiLayer.addWidget(this._mainWidget);
+        this.addChild(this._uiLayer);
+
+        this.initStaticUI();
+        this.refreshUI();
+    },
+
+    initStaticUI: function() {
+        if (!this._mainWidget) {
+            return;
+        }
+    },
+
+    refreshUI: function() {
+        if (!this._mainWidget) {
+            return;
+        }
+    },
+
+    destroy: function() {},
+
+    onEnter: function() {
+        cc.log('$1Scene > onEnter');
+    },
+
+    onButtonClicked: function(sender, type) {
+        if (type !== ccs.TouchEventType.ended) {
+            return;
+        }
+        var tag = sender.getTag();
+        cc.log("onButtonClicked > tag : " + tag);
+        SimpleAudioManager.playCommonEffect(GlobalConstants.KEY_EFFECT_BUTTON_CLICK);
+
+        switch (tag) {}
+    }
+});
+
+$1Scene.create = function(params) {
+    var layer = new $1Scene(params);
+    if (layer && layer.init()) {
+        return layer;
+    }
+    return;
+};
+
+$1Scene.scene = function(params) {
+    var scene = cc.Scene.create();
+    var layer = $1Scene.create(params);
+
+    if (!scene || !layer) {
+        return {};
+    }
+
+    scene.addChild(layer, 1);
+
+    return {
+        scene: scene,
+        layer: layer
+    };
+};
